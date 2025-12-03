@@ -51,7 +51,7 @@ curl http://localhost:4000/health
 ### 体验示例页面
 
 1. 在项目根目录运行 `npm start`
-2. 用浏览器打开 `example/index.html`
+2. 用浏览器打开 `http://localhost:4000/example`
 3. 页面中间是模拟小说正文，段尾有一个 💬 图标
 4. 点击某段的 💬：
    - 右侧会弹出「段落评论」面板

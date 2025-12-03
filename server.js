@@ -367,6 +367,18 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // 示例页面
+    if (url.pathname === "/example") {
+      const filePath = path.join(__dirname, "example", "index.html");
+      try {
+        const content = await fs.readFile(filePath, "utf8");
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(content);
+      } catch (e) {
+        return sendJson(res, 404, { error: "example_not_found" });
+      }
+    }
+
     if (url.pathname === "/health") {
       res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
       return res.end("ok");

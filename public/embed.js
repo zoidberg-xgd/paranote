@@ -551,41 +551,47 @@
 
       // 样式逻辑：默认为灰色，只有当前选中段落(currentParaIndex)才显示红色
       const isActive = (currentParaIndex === idx);
+      
+      // 统一风格：全部显示数字，不再使用 emoji
+      // 未选中：灰色(#999)，选中：红色(#f56c6c)
       const color = isActive ? "#f56c6c" : "#999";
-      const borderColor = isActive ? "#f56c6c" : "#ccc";
+      const borderColor = isActive ? "#f56c6c" : "#e0e0e0"; // 平时边框淡一点
       
       Object.assign(badge.style, {
         display: "inline-block",
         marginLeft: isMobile ? "8px" : "6px",
-        padding: count > 0 ? "0 4px" : "0",
+        padding: "0 4px",
         fontSize: isMobile ? "11px" : "10px",
-        color: count > 0 ? color : "transparent",
-        background: count > 0 ? "#fff" : "transparent",
-        border: count > 0 ? `1px solid ${borderColor}` : "none",
+        color: color,
+        background: "#fff",
+        border: `1px solid ${borderColor}`,
         borderRadius: "2px",
         cursor: "pointer",
         fontWeight: "500",
-        minWidth: count > 0 ? "20px" : "0",
-        height: count > 0 ? "18px" : "0",
-        lineHeight: count > 0 ? "18px" : "0",
+        minWidth: "18px",
+        height: "18px",
+        lineHeight: "16px", // adjust for border
         textAlign: "center",
         verticalAlign: "middle",
         touchAction: "manipulation",
         transition: "all 0.15s ease",
         boxSizing: "border-box",
       });
-      badge.textContent = count > 0 ? count : "";
-      badge.title = count > 0 ? count + " 条评论" : "点击评论";
       
-      if (!isMobile && count > 0) {
-        // 移除之前的事件监听器（简化处理，直接覆盖）
+      badge.textContent = count;
+      badge.title = count + " 条评论";
+      
+      // 移除之前的特殊样式 override
+      badge.style.fontSize = isMobile ? "11px" : "10px";
+      
+      if (!isMobile) {
         badge.onmouseenter = function () {
           badge.style.borderColor = "#f56c6c";
           badge.style.color = "#f56c6c";
         };
         badge.onmouseleave = function () {
-          badge.style.borderColor = isActive ? "#f56c6c" : "#ccc";
-          badge.style.color = isActive ? "#f56c6c" : "#999";
+          badge.style.borderColor = borderColor;
+          badge.style.color = color;
         };
       }
     });
