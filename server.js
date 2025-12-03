@@ -286,8 +286,87 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // 静态文件服务（用于提供 embed.js 和 dist/paranote.min.js）
+  // 网页导入功能
+  if (url.pathname === "/import" && req.method === "GET") {
+      const targetUrl = url.searchParams.get("url");
+      if (!targetUrl) {
+          res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
+          return res.end("请输入 URL");
+      }
+
+      try {
+          const resp = await fetch(targetUrl);
+          if (!resp.ok) throw new Error(`Failed to fetch: ${resp.status}`);
+          
+          let html = await resp.text();
+          const origin = new URL(targetUrl).origin;
+          
+          // 1. 注入 Base Tag 解决相对路径资源问题
+          if (!html.includes("<base")) {
+              html = html.replace("<head>", `<head><base href="${targetUrl}">`);
+          }
+
+          // 2. 生成唯一的 ID
+          const workId = crypto.createHash('md5').update(new URL(targetUrl).hostname).digest('hex');
+          const chapterId = crypto.createHash('md5').update(targetUrl).digest('hex');
+
+          // 3. 给 body 注入标记
+          html = html.replace("<body", `<body data-na-root data-site-id="imported" data-work-id="${workId}" data-chapter-id="${chapterId}"`);
+
+          // 4. 注入 embed.js
+          const script = `
+          <script>
+             // 简单的防跨域资源报错抑制 (可选)
+             window.addEventListener('error', function(e) {
+                 if(e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT') {
+                     // console.log('Resource load error suppressed');
+                 }
+             }, true);
+          </script>
+          <script 
+            async
+            src="${url.origin}/public/embed.js" 
+            data-site-id="imported" 
+            data-api-base="${url.origin}"
+          ></script>
+          <style>
+            /* 强制侧边栏最高层级 */
+            .na-sidebar, .na-overlay { z-index: 2147483647 !important; }
+            /* 给所有段落增加显式间隔，方便点击 */
+            p { margin-bottom: 1em; }
+          </style>
+          `;
+          
+          // 插入到 body 结束标签前，或者 html 结束标签前
+          if (html.includes("</body>")) {
+              html = html.replace("</body>", script + "</body>");
+          } else {
+              html += script;
+          }
+
+          res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+          res.end(html);
+      } catch (e) {
+          res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+          res.end("导入失败: " + e.message);
+      }
+      return;
+  }
+
+  // 静态文件服务
   if (req.method === "GET") {
+    // 根路径返回导入器页面
+    if (url.pathname === "/") {
+      const filePath = path.join(__dirname, "public", "index.html");
+      try {
+        const content = await fs.readFile(filePath, "utf8");
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(content);
+      } catch (e) {
+        return sendJson(res, 404, { error: "index_not_found" });
+      }
+    }
+
     if (url.pathname === "/health") {
       res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
       return res.end("ok");

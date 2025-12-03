@@ -63,34 +63,47 @@ curl http://localhost:4000/health
 
 ## 接入任意小说 / 文章站
 
-假设你把 ParaNote 后端部署在 `https://api.paranote.example`：
+### 方式一：站长集成（推荐）
 
-1. **给正文容器打标记**
+如果您是网站运营者，只需两步即可让您的站点拥有段落评论功能：
 
-```html
-<div
-  data-na-root
-  data-work-id="novel_001"
-  data-chapter-id="ch_005"
->
-  <p>第一段……</p>
-  <p>第二段……</p>
-  ...
-</div>
-```
+1. **标记正文区域**
+   找到包裹文章内容的 HTML 容器（例如 `<div class="content">`），添加以下属性：
+   - `data-na-root`: 标记这是评论根容器
+   - `data-work-id`: 作品唯一 ID (如 `novel_123`)
+   - `data-chapter-id`: 章节唯一 ID (如 `ch_456`)
 
-2. **在页面尾部引入 ParaNote**
+   ```html
+   <div class="article-content"
+     data-na-root
+     data-work-id="novel_001"
+     data-chapter-id="chapter_001"
+   >
+     <p>正文第一段...</p>
+     <p>正文第二段...</p>
+   </div>
+   ```
 
-```html
-<script
-  async
-  src="https://api.paranote.example/public/embed.js"
-  data-site-id="site_abc123"
-  data-api-base="https://api.paranote.example"
-></script>
-```
+2. **引入脚本**
+   在页面底部（`</body>` 前）引入 ParaNote 脚本：
 
-完成以上两步，这个章节就拥有段落评论能力。
+   ```html
+   <script
+     async
+     src="https://api.paranote.example/public/embed.js"
+     data-site-id="my-novel-site"
+     data-api-base="https://api.paranote.example"
+   ></script>
+   ```
+   *(请将 `https://api.paranote.example` 替换为您的 ParaNote 部署地址)*
+
+### 方式二：网页导入器（预览工具）
+
+如果您想在不修改代码的情况下预览 ParaNote 在您网站上的效果，或者想为任意网页添加私人评论：
+
+1. 访问部署好的 ParaNote 首页（例如 `http://localhost:4000/`）。
+2. 输入目标网页 URL。
+3. 点击导入，ParaNote 将作为代理加载页面并自动注入评论系统。
 
 ---
 
