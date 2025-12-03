@@ -23,19 +23,29 @@
 
 ### 1. 启动服务
 
-**本地启动**
+**推荐：使用 Docker Compose (一键启动)**
+
+```bash
+# 后台启动
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+```
+
+**或者使用 Docker 命令行**
+
+```bash
+docker build -t paranote .
+docker run -d -p 4000:4000 -v $(pwd)/data:/app/data paranote
+```
+
+**本地开发启动**
 
 ```bash
 npm install
 npm start
 # 默认运行在 http://localhost:4000
-```
-
-**或者使用 Docker 部署**
-
-```bash
-docker build -t paranote .
-docker run -d -p 4000:4000 -v $(pwd)/data:/app/data paranote
 ```
 
 ### 2. 使用方式

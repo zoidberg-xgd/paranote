@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  paranote:
+    container_name: paranote
+    build: .
+    ports:
+      - "4000:4000"
+    volumes:
+      # 持久化评论数据
+      - ./data:/app/data
+      # 可选：挂载 puppeteer 用户数据，保留登录状态
+      # - ./puppeteer_data:/app/puppeteer_data
+    environment:
+      - NODE_ENV=production
+      - PUPPETEER_HEADLESS=true
+      # 配置站点密钥 (JSON 格式)
+      # - SITE_SECRETS={"default-site":"change-me-secret"}
+    restart: always
+    # 限制资源，防止 Puppeteer 占用过多内存
+    deploy:
+      resources:
+        limits:
+          memory: 1G
