@@ -34,7 +34,8 @@ describe('ParaNote API Tests', () => {
       content: 'Hello World',
       userName: 'Guest'
     });
-    expect(res.body.userId).toBeFalsy(); // 可以是 undefined 或 null
+    // 现在匿名用户也会根据 IP 生成 userId
+    expect(res.body.userId).toMatch(/^ip_/);
   });
 
   it('should verify JWT and identify user', async () => {
@@ -84,7 +85,7 @@ describe('ParaNote API Tests', () => {
     // 根据目前 server.js 逻辑，verifyJwt 失败返回 null，代码会回退到 body.userName 或 "匿名"
     expect(res.status).toBe(201);
     expect(res.body.userName).toBe('匿名'); // 因为没传 body.userName，且 token 无效
-    expect(res.body.userId).toBeFalsy();
+    expect(res.body.userId).toMatch(/^ip_/);
   });
 
   it('should enforce one like per user', async () => {
@@ -121,7 +122,7 @@ describe('ParaNote API Tests', () => {
     expect(likeRes2.status).toBe(400); // already_liked
   });
   
-  it('should fail to like without login', async () => {
+  it('should allow like without login (IP based)', async () => {
       const commentRes = await request(server)
         .post('/api/v1/comments')
         .send({ siteId: SITE_ID, workId: WORK_ID, chapterId: CHAPTER_ID, paraIndex: 4, content: 'Anon Like' });
@@ -130,6 +131,7 @@ describe('ParaNote API Tests', () => {
         .post('/api/v1/comments/like')
         .send({ siteId: SITE_ID, workId: WORK_ID, chapterId: CHAPTER_ID, commentId: commentRes.body.id });
         
-      expect(likeRes.status).toBe(401); // login_required
+      expect(likeRes.status).toBe(200);
+      expect(likeRes.body.likes).toBe(1);
   });
 });

@@ -103,8 +103,12 @@ npm start
 ></script>
 ```
 
-### 用户鉴权 (可选)
+### 👤 匿名用户追踪
+当未接入用户系统时，ParaNote 会自动根据用户 IP 生成唯一的**访客身份** (例如 `访客-a1b2c3`)。
+- **稳定头像**：同一 IP 的用户将拥有固定的头像颜色。
+- **点赞支持**：匿名用户现在可以点赞评论 (基于 IP 防止重复点赞)。
 
+### 用户鉴权 (可选)
 支持通过 JWT 对接您现有的用户系统。后端生成 JWT 并注入页面：
 
 ```html
@@ -224,6 +228,26 @@ npm test
 - `public/embed.js`: 前端挂件源码
 - `public/index.html`: 首页入口
 - `storage.js`: 存储层抽象
+
+## 📦 数据迁移 (Import / Export)
+
+ParaNote 支持将所有评论数据导出为 JSON 文件，方便迁移或备份。此功能需要管理员权限。
+
+### 1. 设置管理员密钥
+在环境变量中添加 `ADMIN_SECRET`：
+```bash
+ADMIN_SECRET=your_strong_secret_key
+```
+
+### 2. 导出数据
+```bash
+curl -H "x-admin-secret: your_strong_secret_key" http://your-server/api/v1/export -o backup.json
+```
+
+### 3. 导入数据
+```bash
+curl -X POST -H "x-admin-secret: your_strong_secret_key" -H "Content-Type: application/json" -d @backup.json http://your-server/api/v1/import
+```
 
 ## License
 MIT

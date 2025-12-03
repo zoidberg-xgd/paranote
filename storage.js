@@ -41,3 +41,11 @@ export async function likeComment(...args) {
 export async function deleteComment(...args) {
   return getImpl().deleteComment(...args);
 }
+
+export async function exportAll() {
+  return getImpl().exportAll();
+}
+
+export async function importAll(...args) {
+  return getImpl().importAll(...args);
+}

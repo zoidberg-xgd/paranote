@@ -111,6 +111,37 @@ export function createMongoStorage() {
         // 管理员删除
         await CommentModel.deleteOne({ id: commentId, siteId });
         return true;
+    },
+
+    async exportAll() {
+        if (!CommentModel) throw new Error('MongoDB not initialized');
+        const comments = await CommentModel.find({}).lean();
+        return comments.map(c => {
+            const { _id, __v, ...rest } = c;
+            return {
+                ...rest,
+                createdAt: c.createdAt ? c.createdAt.toISOString() : undefined
+            };
+        });
+    },
+
+    async importAll(comments) {
+        if (!CommentModel) throw new Error('MongoDB not initialized');
+        if (!Array.isArray(comments)) throw new Error("Invalid data format");
+        
+        // Use bulkWrite for efficiency and upsert behavior
+        const ops = comments.map(c => ({
+            updateOne: {
+                filter: { id: c.id },
+                update: { $set: c },
+                upsert: true
+            }
+        }));
+        
+        if (ops.length > 0) {
+            await CommentModel.bulkWrite(ops);
+        }
+        return { success: true, count: ops.length };
     }
   };
 }

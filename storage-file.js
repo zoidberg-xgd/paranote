@@ -97,6 +97,72 @@ export function createFileStorage() {
         return true;
       }
       return false;
+    },
+
+    async exportAll() {
+      try {
+        await fs.mkdir(DATA_DIR, { recursive: true });
+        const files = await fs.readdir(DATA_DIR);
+        const allComments = [];
+        for (const file of files) {
+          if (!file.endsWith('.json')) continue;
+          const filePath = path.join(DATA_DIR, file);
+          try {
+             const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
+             if (Array.isArray(content)) {
+               allComments.push(...content);
+             }
+          } catch(e) { 
+              console.error(`Failed to read ${file}`, e); 
+          }
+        }
+        return allComments;
+      } catch (e) {
+        console.error("Export failed", e);
+        return [];
+      }
+    },
+
+    async importAll(comments) {
+      if (!Array.isArray(comments)) throw new Error("Invalid data format: expected array");
+      
+      // Group by file key
+      const groups = {};
+      for (const c of comments) {
+        if (!c.siteId || !c.workId || !c.chapterId) continue;
+        const key = `${c.siteId}__${c.workId}__${c.chapterId}`; 
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(c);
+      }
+
+      await fs.mkdir(DATA_DIR, { recursive: true });
+      
+      let count = 0;
+      for (const [key, list] of Object.entries(groups)) {
+          if (list.length === 0) continue;
+          const { siteId, workId, chapterId } = list[0];
+          const safeName = `${encodeURIComponent(siteId)}__${encodeURIComponent(workId)}__${encodeURIComponent(chapterId)}.json`;
+          const filePath = path.join(DATA_DIR, safeName);
+          
+          let existing = [];
+          try {
+             existing = JSON.parse(await fs.readFile(filePath, 'utf8'));
+          } catch {}
+          
+          const combined = [...existing];
+          for (const newItem of list) {
+             const idx = combined.findIndex(x => x.id === newItem.id);
+             if (idx !== -1) {
+                 combined[idx] = newItem; 
+             } else {
+                 combined.push(newItem); 
+             }
+          }
+          
+          await fs.writeFile(filePath, JSON.stringify(combined), 'utf8');
+          count += list.length;
+      }
+      return { success: true, count };
     }
   };
 }
