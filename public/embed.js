@@ -335,10 +335,35 @@
     }
   }
 
+  // 简单的 JWT 解析函数
+  function parseJwt(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function loadComments(paraIndex, listEl, headerCountEl) {
     const arr = (allCommentsData || {})[String(paraIndex)] || [];
 
     listEl.innerHTML = "";
+    
+    // 检查当前用户权限
+    let isAdmin = false;
+    let token = null;
+    if (typeof window !== "undefined" && window.PARANOTE_TOKEN) {
+      token = window.PARANOTE_TOKEN;
+      const payload = parseJwt(token);
+      if (payload && (payload.role === 'admin' || payload.isAdmin === true)) {
+        isAdmin = true;
+      }
+    }
     
     // 更新头部评论数
     if (headerCountEl) {
@@ -361,13 +386,18 @@
         borderBottom: idx < arr.length - 1 ? "1px solid #f0f0f0" : "none",
         background: "#fff",
         transition: "background 0.15s",
+        position: "relative", // 为删除按钮定位
       });
+      
+      // ... 用户信息行 code ... (keep existing)
+      // 我需要保留之前的代码，这里使用 multi_edit 或者小心替换
+      // 为了方便，我重写整个 arr.forEach 内部逻辑
       
       // 用户信息行（起点风格：简洁）
       const userRow = document.createElement("div");
       userRow.style.cssText = "display: flex; align-items: center; margin-bottom: 8px;";
       
-      // 用户头像（起点风格：小圆形）
+      // 用户头像
       const avatar = document.createElement("div");
       const name = c.userName || c.userId || "匿名";
       const firstChar = name.length > 0 ? name.charAt(0) : "匿";
@@ -388,7 +418,6 @@
       `;
       avatar.textContent = firstChar;
       
-      // 用户名和元信息（起点风格）
       const userInfo = document.createElement("div");
       userInfo.style.cssText = "flex: 1; min-width: 0;";
       
@@ -411,15 +440,91 @@
       userRow.appendChild(avatar);
       userRow.appendChild(userInfo);
       
-      // 评论内容（起点风格：简洁排版）
+      // 评论内容
       const content = document.createElement("div");
       content.style.cssText = "color: #333; font-size: 13px; line-height: 1.7; margin-left: 36px; word-break: break-word; padding-top: 4px;";
       content.textContent = c.content;
       
+      // 操作栏（点赞 + 删除）
+      const actionContainer = document.createElement("div");
+      actionContainer.style.cssText = "display: flex; justify-content: flex-end; align-items: center; margin-top: 4px;";
+      
+      // 删除按钮（仅管理员）
+      if (isAdmin) {
+        const delBtn = document.createElement("button");
+        delBtn.innerHTML = "删除";
+        delBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#999; font-size:12px; margin-right: 12px;";
+        delBtn.onmouseenter = () => delBtn.style.color = "#f56c6c";
+        delBtn.onmouseleave = () => delBtn.style.color = "#999";
+        delBtn.onclick = async function() {
+          if(!confirm("确定删除这条评论吗？")) return;
+          try {
+             const headers = { "Content-Type": "application/json" };
+             if (token) headers["X-Paranote-Token"] = token;
+             
+             const res = await fetch(apiBase + "/comments", {
+                 method: "DELETE",
+                 headers,
+                 body: JSON.stringify({ siteId, workId, chapterId, commentId: c.id })
+             });
+             if(res.ok) {
+                 // 刷新评论
+                 await loadAllComments();
+                 updateCommentCounts();
+                 await loadComments(paraIndex, listEl, headerCountEl);
+             } else {
+                 alert("删除失败，可能是权限不足");
+             }
+          } catch(e) { console.error(e); alert("网络错误"); }
+        };
+        actionContainer.appendChild(delBtn);
+      }
+      
+      // 点赞按钮
+      const likeBtn = document.createElement("button");
+      const likes = c.likes || 0;
+      likeBtn.innerHTML = `<span style="font-size:14px">👍</span> <span style="margin-left:4px">${likes}</span>`;
+      likeBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#999; font-size:12px; display:flex; align-items:center; padding: 2px 6px;";
+      
+      likeBtn.onmouseenter = () => likeBtn.style.color = "#f56c6c";
+      likeBtn.onmouseleave = () => likeBtn.style.color = "#999";
+
+      likeBtn.onclick = async function() {
+          try {
+             const headers = { "Content-Type": "application/json" };
+             if (token) headers["X-Paranote-Token"] = token;
+             
+             const res = await fetch(apiBase + "/comments/like", {
+                 method: "POST",
+                 headers,
+                 body: JSON.stringify({ siteId, workId, chapterId, commentId: c.id })
+             });
+             
+             if(res.status === 401) {
+                 alert("请登录后再点赞");
+                 return;
+             }
+             
+             if(res.status === 400) {
+                 // 可能是已点赞，或者参数错误
+                 // 我们假设主要是“已点赞”
+                 alert("您已经点过赞了");
+                 return;
+             }
+
+             if(res.ok) {
+                 const data = await res.json();
+                 likeBtn.innerHTML = `<span style="font-size:14px">👍</span> <span style="margin-left:4px; color:#f56c6c">${data.likes}</span>`;
+             }
+          } catch(e) { console.error(e); }
+      };
+
+      actionContainer.appendChild(likeBtn);
+      
       item.appendChild(userRow);
       item.appendChild(content);
+      item.appendChild(actionContainer);
       
-      // hover 效果（桌面端，起点风格：轻微背景变化）
       if (!isMobile) {
         item.addEventListener("mouseenter", function () {
           item.style.background = "#fafafa";
@@ -433,7 +538,7 @@
     });
   }
 
-  // 更新段落评论数显示（起点风格：红色边框小方框）
+  // 更新段落评论数显示
   function updateCommentCounts() {
     paras.forEach(function (p, idx) {
       const count = (allCommentsData || {})[String(idx)]?.length || 0;
@@ -443,15 +548,20 @@
         badge.className = "na-comment-count";
         p.appendChild(badge);
       }
-      // 起点风格：红色边框 + 白色背景 + 红色数字，小方框样式
+
+      // 样式逻辑：默认为灰色，只有当前选中段落(currentParaIndex)才显示红色
+      const isActive = (currentParaIndex === idx);
+      const color = isActive ? "#f56c6c" : "#999";
+      const borderColor = isActive ? "#f56c6c" : "#ccc";
+      
       Object.assign(badge.style, {
         display: "inline-block",
         marginLeft: isMobile ? "8px" : "6px",
         padding: count > 0 ? "0 4px" : "0",
         fontSize: isMobile ? "11px" : "10px",
-        color: count > 0 ? "#f56c6c" : "transparent",
+        color: count > 0 ? color : "transparent",
         background: count > 0 ? "#fff" : "transparent",
-        border: count > 0 ? "1px solid #f56c6c" : "none",
+        border: count > 0 ? `1px solid ${borderColor}` : "none",
         borderRadius: "2px",
         cursor: "pointer",
         fontWeight: "500",
@@ -467,16 +577,16 @@
       badge.textContent = count > 0 ? count : "";
       badge.title = count > 0 ? count + " 条评论" : "点击评论";
       
-      // hover 效果（起点风格：轻微背景色变化）
       if (!isMobile && count > 0) {
-        badge.addEventListener("mouseenter", function () {
-          badge.style.background = "#fff5f5";
-          badge.style.borderColor = "#ff4757";
-        });
-        badge.addEventListener("mouseleave", function () {
-          badge.style.background = "#fff";
+        // 移除之前的事件监听器（简化处理，直接覆盖）
+        badge.onmouseenter = function () {
           badge.style.borderColor = "#f56c6c";
-        });
+          badge.style.color = "#f56c6c";
+        };
+        badge.onmouseleave = function () {
+          badge.style.borderColor = isActive ? "#f56c6c" : "#ccc";
+          badge.style.color = isActive ? "#f56c6c" : "#999";
+        };
       }
     });
   }
@@ -511,12 +621,9 @@
 
     // 统一的点击/触摸处理
     const handleClick = async function (e) {
-      // 如果点击的是评论数标签，不阻止默认行为
-      if (e.target.classList.contains("na-comment-count")) {
-        e.stopPropagation();
-        return;
-      }
-      
+      // 如果点击的是评论数标签，不再阻止默认行为，让它触发侧边栏打开
+      // if (e.target.classList.contains("na-comment-count")) { ... }
+
       // 移除之前选中段落的下划线
       if (currentParaIndex !== null && paras[currentParaIndex]) {
         paras[currentParaIndex].style.textDecoration = "none";
@@ -531,6 +638,9 @@
       p.style.textUnderlineOffset = "2px";
       p.style.background = "transparent";
       
+      // 更新所有徽章样式（当前选中的变红）
+      updateCommentCounts();
+
       // 显示侧边栏和遮罩
       sidebar.container.style.display = "flex";
       if (isMobile) {

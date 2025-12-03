@@ -7,7 +7,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { listComments, createComment } from "./storage.js";
+import { listComments, createComment, likeComment, deleteComment } from "./storage.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -191,6 +191,95 @@ const server = http.createServer(async (req, res) => {
         userAvatar,
       });
       return sendJson(res, 201, comment);
+    } catch (e) {
+      console.error(e);
+      return sendJson(res, 500, { error: "internal_error" });
+    }
+  }
+
+  if (url.pathname === "/comments/like" && req.method === "POST") {
+    let body;
+    try {
+      body = await parseBody(req);
+    } catch {
+      return sendJson(res, 400, { error: "invalid_json" });
+    }
+    if (!body) return sendJson(res, 400, { error: "empty_body" });
+
+    const { siteId, workId, chapterId, commentId } = body;
+    if (!siteId || !workId || !chapterId || !commentId) {
+      return sendJson(res, 400, { error: "missing_fields" });
+    }
+
+    try {
+      // 获取当前用户 ID
+      const tokenHeader = req.headers["x-paranote-token"] || req.headers["x-Paranote-Token"];
+      const jwtPayload = verifyJwt(
+        Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader,
+        siteId,
+      );
+      const userId = jwtPayload && (jwtPayload.sub || jwtPayload.userId);
+      
+      // 如果要求“一个用户只能点赞一次”，则必须登录
+      if (!userId) {
+         // 这里可以选择是否允许匿名无限赞。根据需求“一个用户对一个评价只能点赞一次”，
+         // 匿名用户无法区分，为了安全可以禁止匿名点赞，或者允许匿名点赞但不去重。
+         // 这里我们选择：如果没有登录，就无法通过 ID 去重，因此暂时禁止匿名点赞，或者给一个 warning。
+         // 为了体验，如果未登录，我们暂时允许（不传 userId），但无法去重。
+         // 但用户明确说“这不对”，所以最好是限制。
+         // 简单起见：未登录无法点赞。
+         return sendJson(res, 401, { error: "login_required_to_like" });
+      }
+
+      const updated = await likeComment({ siteId, workId, chapterId, commentId, userId });
+      if (updated) {
+        return sendJson(res, 200, { likes: updated.likes });
+      } else {
+        // 如果 updated 为 null，可能是找不到评论，或者已经点过赞
+        // 区分一下不太容易，这里简化处理
+        return sendJson(res, 400, { error: "already_liked_or_not_found" });
+      }
+    } catch (e) {
+      console.error(e);
+      return sendJson(res, 500, { error: "internal_error" });
+    }
+  }
+
+  if (url.pathname === "/comments" && req.method === "DELETE") {
+    let body;
+    try {
+      body = await parseBody(req);
+    } catch {
+      return sendJson(res, 400, { error: "invalid_json" });
+    }
+    if (!body) return sendJson(res, 400, { error: "empty_body" });
+
+    const { siteId, workId, chapterId, commentId } = body;
+    if (!siteId || !workId || !chapterId || !commentId) {
+      return sendJson(res, 400, { error: "missing_fields" });
+    }
+    
+    // 验证管理员权限
+    const tokenHeader = req.headers["x-paranote-token"] || req.headers["x-Paranote-Token"];
+    const jwtPayload = verifyJwt(
+      Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader,
+      siteId,
+    );
+    
+    // 检查是否为管理员 (role === 'admin' 或 isAdmin === true)
+    const isAdmin = jwtPayload && (jwtPayload.role === 'admin' || jwtPayload.isAdmin === true);
+    
+    if (!isAdmin) {
+        return sendJson(res, 403, { error: "permission_denied" });
+    }
+
+    try {
+      const success = await deleteComment({ siteId, workId, chapterId, commentId });
+      if (success) {
+        return sendJson(res, 200, { success: true });
+      } else {
+        return sendJson(res, 404, { error: "not_found" });
+      }
     } catch (e) {
       console.error(e);
       return sendJson(res, 500, { error: "internal_error" });

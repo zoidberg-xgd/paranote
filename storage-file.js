@@ -34,6 +34,14 @@ export function createFileStorage() {
   return {
     async listComments({ siteId, workId, chapterId }) {
       const all = await readAll(siteId, workId, chapterId);
+      // Sort by heat (likes) desc, then time desc
+      all.sort((a, b) => {
+        const likesA = a.likes || 0;
+        const likesB = b.likes || 0;
+        if (likesA !== likesB) return likesB - likesA;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
       const grouped = {};
       for (const c of all) {
         const key = String(c.paraIndex);
@@ -66,12 +74,24 @@ export function createFileStorage() {
         userId,
         userAvatar,
         content,
+        likes: 0,
         createdAt: now,
       };
 
       all.push(comment);
       await writeAll(siteId, workId, chapterId, all);
       return comment;
+    },
+
+    async likeComment({ siteId, workId, chapterId, commentId }) {
+      const all = await readAll(siteId, workId, chapterId);
+      const comment = all.find((c) => c.id === commentId);
+      if (comment) {
+        comment.likes = (comment.likes || 0) + 1;
+        await writeAll(siteId, workId, chapterId, all);
+        return comment;
+      }
+      return null;
     },
   };
 }

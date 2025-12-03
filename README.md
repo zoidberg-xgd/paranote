@@ -9,6 +9,8 @@ Lightweight **paragraph comments** service and embed widget for novel and articl
 ## 特性
 
 - **段落级评论**：按 `siteId + workId + chapterId + paraIndex` 精确定位到具体段落
+- **热度排序**：评论自动按点赞数排序，支持点赞功能
+- **权限管理**：支持 JWT 鉴权，管理员可删除评论，点赞需登录且防止刷赞
 - **前后端解耦**：后端提供简单 HTTP API，前端通过 `embed.js` 以挂件形式接入
 - **可替换存储**：通过 `Storage` 接口抽象，默认文件存储，可扩展到 Postgres / KV / 边缘函数
 - **对接简单**：对接站点只需两步：标记正文容器 + 引入脚本
@@ -147,6 +149,40 @@ X-Paranote-Token: <你的站点生成的 JWT>
 ParaNote 会从 `X-Paranote-Token` 里解析出 `sub/name/avatar/siteId` 等信息，填充到评论记录里的 `userId/userName/userAvatar` 字段。
 
 ---
+
+### 点赞评论
+
+`POST /comments/like`
+
+请求体：
+
+```json
+{
+  "siteId": "site_abc123",
+  "workId": "novel_001",
+  "chapterId": "ch_005",
+  "commentId": "c_xyz"
+}
+```
+
+需携带 Token (X-Paranote-Token)。
+
+### 删除评论（管理员）
+
+`DELETE /comments`
+
+请求体：
+
+```json
+{
+  "siteId": "site_abc123",
+  "workId": "novel_001",
+  "chapterId": "ch_005",
+  "commentId": "c_xyz"
+}
+```
+
+需携带管理员 Token (role: 'admin')。
 
 ## Storage 接口与扩展
 

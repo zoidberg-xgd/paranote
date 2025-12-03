@@ -33,6 +33,14 @@ async function writeAll(siteId, workId, chapterId, comments) {
 
 export async function listComments({ siteId, workId, chapterId }) {
   const all = await readAll(siteId, workId, chapterId);
+  // Sort by heat (likes) desc, then time desc
+  all.sort((a, b) => {
+    const likesA = a.likes || 0;
+    const likesB = b.likes || 0;
+    if (likesA !== likesB) return likesB - likesA;
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   const grouped = {};
   for (const c of all) {
     const key = String(c.paraIndex);
@@ -61,12 +69,45 @@ export async function createComment({
     paraIndex,
     userName: userName || "匿名",
     content,
+    likes: 0,
     createdAt: now,
   };
 
   all.push(comment);
   await writeAll(siteId, workId, chapterId, all);
   return comment;
+}
+
+export async function likeComment({ siteId, workId, chapterId, commentId, userId }) {
+  const all = await readAll(siteId, workId, chapterId);
+  const comment = all.find((c) => c.id === commentId);
+  if (comment) {
+    // 如果提供了 userId，则检查是否已点赞
+    if (userId) {
+      if (!comment.likedBy) comment.likedBy = [];
+      if (comment.likedBy.includes(userId)) {
+        // 已经点赞过了，不处理
+        return null;
+      }
+      comment.likedBy.push(userId);
+    }
+    
+    comment.likes = (comment.likes || 0) + 1;
+    await writeAll(siteId, workId, chapterId, all);
+    return comment;
+  }
+  return null;
+}
+
+export async function deleteComment({ siteId, workId, chapterId, commentId }) {
+  const all = await readAll(siteId, workId, chapterId);
+  const idx = all.findIndex((c) => c.id === commentId);
+  if (idx !== -1) {
+    all.splice(idx, 1);
+    await writeAll(siteId, workId, chapterId, all);
+    return true;
+  }
+  return false;
 }
 
 
