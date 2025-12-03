@@ -43,7 +43,16 @@ export function createFileStorage() {
       return grouped;
     },
 
-    async createComment({ siteId, workId, chapterId, paraIndex, content, userName }) {
+    async createComment({
+      siteId,
+      workId,
+      chapterId,
+      paraIndex,
+      content,
+      userName,
+      userId,
+      userAvatar,
+    }) {
       const all = await readAll(siteId, workId, chapterId);
       const now = new Date().toISOString();
 
@@ -54,6 +63,8 @@ export function createFileStorage() {
         chapterId,
         paraIndex,
         userName: userName || "匿名",
+        userId,
+        userAvatar,
         content,
         createdAt: now,
       };

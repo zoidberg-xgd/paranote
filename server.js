@@ -3,7 +3,13 @@
 // POST /comments { siteId, workId, chapterId, paraIndex, content, userName? }
 
 import http from "node:http";
+import crypto from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { listComments, createComment } from "./storage.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = process.env.PORT || 4000;
 
@@ -16,6 +22,70 @@ function sendJson(res, statusCode, data) {
     "Access-Control-Allow-Headers": "Content-Type",
   });
   res.end(body);
+}
+
+// 站点密钥配置：真实环境建议从环境变量或配置文件中读取
+// key 为 siteId，value 为对应的 HS256 密钥
+const SITE_SECRETS = {
+  "demo-site": "demo-site-secret-change-me",
+};
+
+function base64UrlDecode(str) {
+  const pad = 4 - (str.length % 4 || 4);
+  const s = str.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat(pad);
+  return Buffer.from(s, "base64").toString("utf8");
+}
+
+function safeEqual(a, b) {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+function verifyJwt(token, expectedSiteId) {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+
+  const [headerB64, payloadB64, sigB64] = parts;
+  let payload;
+
+  try {
+    const headerJson = base64UrlDecode(headerB64);
+    const header = JSON.parse(headerJson);
+    if (header.alg !== "HS256") return null;
+
+    const payloadJson = base64UrlDecode(payloadB64);
+    payload = JSON.parse(payloadJson);
+  } catch {
+    return null;
+  }
+
+  const siteIdFromPayload = payload.siteId;
+  if (!siteIdFromPayload || (expectedSiteId && siteIdFromPayload !== expectedSiteId)) {
+    return null;
+  }
+
+  const secret = SITE_SECRETS[siteIdFromPayload];
+  if (!secret) return null;
+
+  const data = `${headerB64}.${payloadB64}`;
+  const expectedSig = crypto
+    .createHmac("sha256", secret)
+    .update(data)
+    .digest("base64")
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+
+  if (!safeEqual(expectedSig, sigB64)) return null;
+
+  if (typeof payload.exp === "number" && Date.now() / 1000 > payload.exp) {
+    return null;
+  }
+
+  return payload;
 }
 
 function parseBody(req) {
@@ -98,13 +168,27 @@ const server = http.createServer(async (req, res) => {
     }
 
     try {
+      // 从站点注入的 JWT 中提取用户信息（如果存在）
+      const tokenHeader = req.headers["x-paranote-token"] || req.headers["x-Paranote-Token"];
+      const jwtPayload = verifyJwt(
+        Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader,
+        siteId,
+      );
+
+      const finalUserName =
+        (jwtPayload && (jwtPayload.name || jwtPayload.username)) || userName || "匿名";
+      const userId = jwtPayload && (jwtPayload.sub || jwtPayload.userId);
+      const userAvatar = jwtPayload && jwtPayload.avatar;
+
       const comment = await createComment({
         siteId,
         workId,
         chapterId,
         paraIndex,
         content: String(content).trim(),
-        userName,
+        userName: finalUserName,
+        userId,
+        userAvatar,
       });
       return sendJson(res, 201, comment);
     } catch (e) {
@@ -113,10 +197,43 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // 其他路径简单返回
-  if (req.method === "GET" && url.pathname === "/health") {
-    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
-    return res.end("ok");
+  // 静态文件服务（用于提供 embed.js 和 dist/paranote.min.js）
+  if (req.method === "GET") {
+    if (url.pathname === "/health") {
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+      return res.end("ok");
+    }
+
+    // 提供 public/embed.js 或 dist/paranote.min.js
+    if (url.pathname === "/public/embed.js" || url.pathname === "/embed.js") {
+      const filePath = path.join(__dirname, "public", "embed.js");
+      try {
+        const content = await fs.readFile(filePath, "utf8");
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+          "Cache-Control": "no-cache",
+        });
+        return res.end(content);
+      } catch (e) {
+        res.writeHead(404);
+        return res.end("Not found");
+      }
+    }
+
+    if (url.pathname === "/dist/paranote.min.js") {
+      const filePath = path.join(__dirname, "dist", "paranote.min.js");
+      try {
+        const content = await fs.readFile(filePath, "utf8");
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+        });
+        return res.end(content);
+      } catch (e) {
+        res.writeHead(404);
+        return res.end("Not found");
+      }
+    }
   }
 
   res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });

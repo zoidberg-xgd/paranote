@@ -14,6 +14,8 @@
 //     paraIndex: number;
 //     content: string;
 //     userName?: string;
+//     userId?: string;
+//     userAvatar?: string;
 //     ip?: string;
 //   }): Promise<Comment>
 // }
@@ -25,6 +27,8 @@
 //   chapterId: string;
 //   paraIndex: number;
 //   userName?: string;
+//   userId?: string;
+//   userAvatar?: string;
 //   content: string;
 //   createdAt: string;
 // }

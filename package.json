@@ -5,7 +5,9 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:embed": "esbuild public/embed.js --bundle --minify --format=iife --global-name=ParaNoteEmbed --outfile=dist/paranote.min.js",
+    "lint": "eslint ."
   },
   "keywords": [
     "comments",
@@ -15,7 +17,14 @@
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "globals": "^15.0.0",
+    "typescript": "^5.6.0"
+  }
 }
 
 

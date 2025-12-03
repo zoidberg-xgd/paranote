@@ -20,7 +20,8 @@ Lightweight **paragraph comments** service and embed widget for novel and articl
 - `server.js` - 极简 Node.js HTTP 服务，提供 `/comments` API
 - `storage.js` - Storage 统一出口，提供 `getStorage()/setStorage()`
 - `storage-file.js` - 默认的文件存储实现
-- `public/embed.js` - 浏览器端嵌入脚本（ParaNote 挂件）
+- `public/embed.js` - 浏览器端嵌入脚本源码（ParaNote 挂件）
+- `dist/paranote.min.js` - 由 esbuild 打包压缩后的单文件版本
 - `example/index.html` - 示例小说页面
 - `data/` - 运行时生成的评论数据（JSON 文件）
 
@@ -30,10 +31,15 @@ Lightweight **paragraph comments** service and embed widget for novel and articl
 
 ```bash
 npm install
-npm start   # 默认 http://localhost:4000
+
+# 启动后端 API（默认 http://localhost:4000）
+npm start
+
+# 构建压缩版前端挂件（生成 dist/paranote.min.js）
+npm run build:embed
 ```
 
-健康检查：
+健康检查（后端）：
 
 ```bash
 curl http://localhost:4000/health
@@ -117,7 +123,7 @@ curl http://localhost:4000/health
 
 `POST /comments`
 
-请求体：
+请求体（无用户系统时）：
 
 ```json
 {
@@ -130,20 +136,15 @@ curl http://localhost:4000/health
 }
 ```
 
-返回：
+如果对接了站点用户系统，则推荐使用 JWT：
 
-```json
-{
-  "id": "c2",
-  "siteId": "site_abc123",
-  "workId": "novel_001",
-  "chapterId": "ch_005",
-  "paraIndex": 0,
-  "userName": "小明",
-  "content": "这一段好有画面感",
-  "createdAt": "2025-01-01T12:01:00.000Z"
-}
+```http
+POST /comments
+Content-Type: application/json
+X-Paranote-Token: <你的站点生成的 JWT>
 ```
+
+ParaNote 会从 `X-Paranote-Token` 里解析出 `sub/name/avatar/siteId` 等信息，填充到评论记录里的 `userId/userName/userAvatar` 字段。
 
 ---
 
@@ -159,6 +160,8 @@ type Comment = {
   chapterId: string;
   paraIndex: number;
   userName?: string;
+   userId?: string;
+   userAvatar?: string;
   content: string;
   createdAt: string;
 };
@@ -177,6 +180,8 @@ interface Storage {
     paraIndex: number;
     content: string;
     userName?: string;
+    userId?: string;
+    userAvatar?: string;
     ip?: string;
   }): Promise<Comment>;
 }
@@ -203,6 +208,74 @@ let storage = createXxxStorage();
 ```
 
 ---
+
+## 与站点用户系统集成（WordPress / Flarum 等）
+
+推荐做法：由站点后端生成一个 **JWT** 注入到页面，ParaNote 从 `X-Paranote-Token` 头里解析用户信息。
+
+### 1. 宿主站点需要做的事
+
+1. 为站点分配一个 `siteId`，并在 ParaNote 这边配置对应的 `siteSecret`（HS256 密钥）。
+2. 用户登录后，站点后端生成 JWT（payload 示例）：
+
+```json
+{
+  "sub": "user_123",
+  "name": "小明",
+  "avatar": "https://example.com/avatar/user_123.png",
+  "siteId": "site_abc123",
+  "exp": 1735689600
+}
+```
+
+3. 在页面上把 token 注入到全局：
+
+```html
+<script>
+  window.PARANOTE_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+</script>
+
+<script
+  async
+  src="https://api.paranote.example/dist/paranote.min.js"
+  data-site-id="site_abc123"
+  data-api-base="https://api.paranote.example"
+></script>
+```
+
+ParaNote 的 `embed.js` 会自动把 `window.PARANOTE_TOKEN` 作为 `X-Paranote-Token` 发送给后端。
+
+### 2. WordPress 接入示例（伪代码）
+
+在你的主题或插件中（省略命名空间和错误处理）：
+
+```php
+use Firebase\JWT\JWT;
+
+function paranote_enqueue_scripts() {
+    $site_id = 'site_abc123';
+    $site_secret = '你的-site-secret';
+
+    $token = null;
+    if (is_user_logged_in()) {
+        $user = wp_get_current_user();
+        $payload = [
+            'sub'    => 'wp_' . $user->ID,
+            'name'   => $user->display_name,
+            'avatar' => get_avatar_url($user->ID),
+            'siteId' => $site_id,
+            'exp'    => time() + 3600,
+        ];
+        $token = JWT::encode($payload, $site_secret, 'HS256');
+    }
+
+    wp_enqueue_script('paranote-embed', 'https://api.paranote.example/dist/paranote.min.js', [], null, true);
+    wp_add_inline_script('paranote-embed', 'window.PARANOTE_TOKEN = ' . json_encode($token) . ';', 'before');
+}
+add_action('wp_enqueue_scripts', 'paranote_enqueue_scripts');
+```
+
+Flarum / 其他 PHP 或 Node 框架，只要能生成同样格式的 JWT 并注入 `window.PARANOTE_TOKEN`，即可复用同样的机制。
 
 ## License
 

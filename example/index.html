@@ -2,51 +2,400 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <title>ParaNote 段落评论 Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>第一章 清晨、电车、魔法少女 - ParaNote Demo</title>
     <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-        background: #f6f2e9;
+      * {
+        box-sizing: border-box;
         margin: 0;
-        padding: 40px;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        line-height: 1.6;
+      }
+      
+      /* 顶部导航栏（起点风格） */
+      .header {
+        background: #fff;
+        border-bottom: 1px solid #e5e5e5;
+        padding: 12px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      }
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
         display: flex;
-        justify-content: center;
+        align-items: center;
+        justify-content: space-between;
       }
-      .page {
-        width: 720px;
-        background: #fdfaf4;
-        padding: 32px 40px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.06);
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
       }
-      h1 {
+      .back-btn {
+        color: #666;
+        text-decoration: none;
+        font-size: 14px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+      .back-btn:hover {
+        background: #f5f5f5;
+        color: #333;
+      }
+      .book-title {
+        font-size: 15px;
+        color: #333;
+        font-weight: 500;
+      }
+      .header-right {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+      .header-btn {
+        color: #666;
+        font-size: 13px;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        background: transparent;
+      }
+      .header-btn:hover {
+        background: #f5f5f5;
+        color: #333;
+      }
+      
+      /* 主内容区域（起点风格） */
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+      }
+      
+      /* 左侧内容区 */
+      .main-content {
+        flex: 1;
+        background: #fff;
+        padding: 30px 40px;
+        min-height: calc(100vh - 200px);
+      }
+      
+      /* 章节信息（起点风格） */
+      .chapter-info {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e5e5;
+      }
+      .chapter-title {
         font-size: 22px;
+        color: #1a1a1a;
+        font-weight: 500;
+        margin-bottom: 12px;
+      }
+      .chapter-meta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 13px;
+        color: #999;
+      }
+      .chapter-meta span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      
+      /* 正文内容（起点风格） */
+      [data-na-root] {
+        font-size: 16px;
+        line-height: 2;
+        color: #333;
+      }
+      [data-na-root] p {
+        text-indent: 2em;
+        margin: 16px 0;
+        letter-spacing: 0.3px;
+      }
+      
+      /* 底部导航（起点风格） */
+      .chapter-nav {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e5e5;
+        display: flex;
+        justify-content: space-between;
+      }
+      .nav-btn {
+        padding: 10px 20px;
+        background: #f56c6c;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+      }
+      .nav-btn:hover {
+        background: #ff4757;
+      }
+      .nav-btn.prev {
+        background: #fff;
+        color: #666;
+        border: 1px solid #e5e5e5;
+      }
+      .nav-btn.prev:hover {
+        background: #f5f5f5;
+        color: #333;
+      }
+      
+      /* 右侧边栏（起点风格） */
+      .sidebar {
+        width: 280px;
+        flex-shrink: 0;
+      }
+      .sidebar-box {
+        background: #fff;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        padding: 16px;
         margin-bottom: 16px;
       }
-      p {
-        line-height: 1.8;
-        text-indent: 2em;
-        margin: 10px 0;
+      .sidebar-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e5e5e5;
+      }
+      .book-info {
+        display: flex;
+        gap: 12px;
+      }
+      .book-cover {
+        width: 80px;
+        height: 110px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 4px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 12px;
+        text-align: center;
+        padding: 8px;
+      }
+      .book-details {
+        flex: 1;
+      }
+      .book-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+      .book-author {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 8px;
+      }
+      .read-btn {
+        display: inline-block;
+        padding: 6px 16px;
+        background: #f56c6c;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 13px;
+        margin-top: 8px;
+        transition: all 0.2s;
+      }
+      .read-btn:hover {
+        background: #ff4757;
+      }
+      
+      /* 目录列表 */
+      .chapter-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .chapter-item {
+        padding: 8px 0;
+        border-bottom: 1px solid #f5f5f5;
+        font-size: 13px;
+      }
+      .chapter-item:last-child {
+        border-bottom: none;
+      }
+      .chapter-item a {
+        color: #666;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+      .chapter-item a:hover {
+        color: #f56c6c;
+      }
+      .chapter-item.current {
+        color: #f56c6c;
+        font-weight: 500;
+      }
+      
+      /* 移动端适配 */
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+          padding: 0 12px;
+        }
+        .sidebar {
+          width: 100%;
+          order: -1;
+        }
+        .main-content {
+          padding: 20px 16px;
+        }
+        .chapter-title {
+          font-size: 20px;
+        }
+        [data-na-root] {
+          font-size: 15px;
+        }
+        [data-na-root] p {
+          margin: 14px 0;
+        }
+        .header-content {
+          padding: 0 12px;
+        }
+        .header-right {
+          gap: 8px;
+        }
+        .header-btn {
+          padding: 6px 8px;
+          font-size: 12px;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="page">
-      <h1>ParaNote · 第一章 清晨、电车、魔法少女（Demo）</h1>
-      <div
-        data-na-root
-        data-work-id="demo-novel-1"
-        data-chapter-id="chapter-1"
-      >
-        <p>清晨，在只有一个人的双人床上苏醒。</p>
-        <p>伸出的下意识伸手去触碰旁边的枕头，入手的却只有空空一片。</p>
-        <p>他总是在幻想一切只是梦境，枕边人尚在身旁。</p>
-        <p>忐忑地望着天花板，好好平复了一下心情，才从床上坐起。</p>
-        <p>洗漱、剃须、穿衣，整理仪表，这些东西一成不变。</p>
-        <p>走出房间，看到隔壁，属于女儿的小房间门口贴着“先敲门”的字条。</p>
+    <!-- 顶部导航栏 -->
+    <div class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <a href="#" class="back-btn">← 返回</a>
+          <span class="book-title">下班，然后变成魔法少女</span>
+        </div>
+        <div class="header-right">
+          <button class="header-btn">目录</button>
+          <button class="header-btn">书详情</button>
+          <button class="header-btn">夜间</button>
+          <button class="header-btn">设置</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="container">
+      <!-- 左侧正文 -->
+      <div class="main-content">
+        <!-- 章节信息 -->
+        <div class="chapter-info">
+          <h1 class="chapter-title">第一章 清晨、电车、魔法少女</h1>
+          <div class="chapter-meta">
+            <span>下班，然后变成魔法少女</span>
+            <span>·</span>
+            <span>弧盐</span>
+            <span>·</span>
+            <span>2008字</span>
+            <span>·</span>
+            <span>2023年01月01日 12:08</span>
+          </div>
+        </div>
+        
+        <!-- 正文内容 -->
+        <div
+          data-na-root
+          data-work-id="demo-novel-1"
+          data-chapter-id="chapter-1"
+        >
+          <p>清晨，在只有一个人的双人床上苏醒。窗外的电车划过铁轨，发出轻微的嗡鸣声，把城市从梦里推向清醒。</p>
+          <p>伸出的下意识伸手去触碰旁边的枕头，入手的却只有空空一片——那里曾经有人留下过温度，如今只剩冰凉的褶皱。</p>
+          <p>他总是在幻想一切只是梦境，枕边人还在身旁，只要睁开眼就能看到熟悉的侧脸，只要开口就能听到困倦的回应。</p>
+          <p>忐忑地望着天花板，他深呼吸，默数到十，像每天早上重复的仪式一样，好好平复了一下心情，才从床上坐起。</p>
+          <p>洗漱、剃须、穿衣，整理仪表，这些程序一成不变，像是刻在身体里的咒语，只要念完，就能暂时把悲伤封印起来。</p>
+          <p>走出房间，他看了一眼走廊尽头那扇门——属于女儿的小房间。门口贴着一张歪歪扭扭的"先敲门"字条，已经有些褪色。</p>
+          <p>他抬起手，又慢慢放下。门后安静得没有一点声响，只有冰箱在厨房里发出低沉的运转声，像远处海面的潮水。</p>
+          <p>手机屏幕在桌上亮了一下，是地铁 APP 的上班提醒。他看了一眼时间，苦笑着按掉提醒，拿起放在门边的公文包。</p>
+          <p>今天的路途、今天的会议、今天的报告……一切都和昨天没有什么不同。只有他自己知道，每一天都在与回忆拔河。</p>
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="chapter-nav">
+          <a href="#" class="nav-btn prev">上一章</a>
+          <a href="#" class="nav-btn">下一章</a>
+        </div>
+      </div>
+      
+      <!-- 右侧边栏 -->
+      <div class="sidebar">
+        <!-- 书籍信息 -->
+        <div class="sidebar-box">
+          <div class="sidebar-title">书详情</div>
+          <div class="book-info">
+            <div class="book-cover">下班，然后变成魔法少女</div>
+            <div class="book-details">
+              <div class="book-name">下班，然后变成魔法少女</div>
+              <div class="book-author">作者：弧盐</div>
+              <a href="#" class="read-btn">开始阅读</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 目录 -->
+        <div class="sidebar-box">
+          <div class="sidebar-title">目录</div>
+          <div class="chapter-list">
+            <div class="chapter-item current">
+              <a href="#">第一章 清晨、电车、魔法少女</a>
+            </div>
+            <div class="chapter-item">
+              <a href="#">第二章 通勤路上的意外</a>
+            </div>
+            <div class="chapter-item">
+              <a href="#">第三章 魔法少女的觉醒</a>
+            </div>
+            <div class="chapter-item">
+              <a href="#">第四章 第一次战斗</a>
+            </div>
+            <div class="chapter-item">
+              <a href="#">第五章 日常与异常</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- 在真实小说站中，只需要引入这一段脚本即可 -->
+    <script>
+      // 如果你已经在站点后端生成了 JWT，可以在这里替换为真实 token
+      // window.PARANOTE_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+    </script>
     <script
       async
       src="http://localhost:4000/public/embed.js"
