@@ -14,6 +14,12 @@ services:
     environment:
       - NODE_ENV=production
       - PUPPETEER_HEADLESS=true
+      # --- 高级配置 ---
+      # 禁用 Puppeteer 以节省内存 (如果你不需要绕过 Cloudflare)
+      # - ENABLE_PUPPETEER=false
+      # 切换到 MongoDB 存储 (适合 Render/Zeabur 等无持久化平台)
+      # - STORAGE_TYPE=mongo
+      # - MONGO_URI=mongodb+srv://user:pass@host/db
       # 配置站点密钥 (JSON 格式)
       # - SITE_SECRETS={"default-site":"change-me-secret"}
     restart: always

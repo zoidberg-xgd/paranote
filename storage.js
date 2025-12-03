@@ -1,119 +1,43 @@
-// 非常简单的文件存储实现，用于 demo。
-// 将每个 (siteId, workId, chapterId) 的所有评论存成一个 JSON 数组。
+import { createFileStorage } from "./storage-file.js";
+// 我们使用动态导入来避免硬依赖
+// import { createMongoStorage, initMongo } from "./storage-mongo.js";
 
-import fs from "node:fs/promises";
-import path from "node:path";
-import crypto from "node:crypto";
+let implementation = null;
 
-const DATA_DIR = new URL("./data", import.meta.url);
-
-function getFilePath(siteId, workId, chapterId) {
-  const safeName = `${encodeURIComponent(siteId)}__${encodeURIComponent(
-    workId,
-  )}__${encodeURIComponent(chapterId)}.json`;
-  return path.join(DATA_DIR.pathname, safeName);
-}
-
-async function readAll(siteId, workId, chapterId) {
-  const file = getFilePath(siteId, workId, chapterId);
-  try {
-    const txt = await fs.readFile(file, "utf8");
-    return JSON.parse(txt);
-  } catch {
-    return [];
+export async function initStorage() {
+  const type = process.env.STORAGE_TYPE || "file";
+  console.log(`Using storage: ${type}`);
+  
+  if (type === "mongo") {
+    // 动态导入，这样如果不使用 mongo，甚至不需要安装 mongoose
+    const { createMongoStorage, initMongo } = await import("./storage-mongo.js");
+    await initMongo();
+    implementation = createMongoStorage();
+  } else {
+    implementation = createFileStorage();
   }
 }
 
-async function writeAll(siteId, workId, chapterId, comments) {
-  const dir = DATA_DIR.pathname;
-  await fs.mkdir(dir, { recursive: true });
-  const file = getFilePath(siteId, workId, chapterId);
-  await fs.writeFile(file, JSON.stringify(comments), "utf8");
-}
-
-export async function listComments({ siteId, workId, chapterId }) {
-  const all = await readAll(siteId, workId, chapterId);
-  // Sort by heat (likes) desc, then time desc
-  all.sort((a, b) => {
-    const likesA = a.likes || 0;
-    const likesB = b.likes || 0;
-    if (likesA !== likesB) return likesB - likesA;
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
-
-  const grouped = {};
-  for (const c of all) {
-    const key = String(c.paraIndex);
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(c);
+function getImpl() {
+  if (!implementation) {
+    // 默认回退到文件存储 (主要方便测试)
+    implementation = createFileStorage();
   }
-  return grouped;
+  return implementation;
 }
 
-export async function createComment({
-  siteId,
-  workId,
-  chapterId,
-  paraIndex,
-  content,
-  userName,
-  userId,
-  userAvatar,
-  contextText, // 新增：段落指纹
-}) {
-  const all = await readAll(siteId, workId, chapterId);
-  const now = new Date().toISOString();
-
-  const comment = {
-    id: crypto.randomUUID(),
-    siteId,
-    workId,
-    chapterId,
-    paraIndex,
-    userName: userName || "匿名",
-    userId,
-    userAvatar,
-    content,
-    contextText, // 存储上下文
-    likes: 0,
-    createdAt: now,
-  };
-
-  all.push(comment);
-  await writeAll(siteId, workId, chapterId, all);
-  return comment;
+export async function listComments(...args) {
+  return getImpl().listComments(...args);
 }
 
-export async function likeComment({ siteId, workId, chapterId, commentId, userId }) {
-  const all = await readAll(siteId, workId, chapterId);
-  const comment = all.find((c) => c.id === commentId);
-  if (comment) {
-    // 如果提供了 userId，则检查是否已点赞
-    if (userId) {
-      if (!comment.likedBy) comment.likedBy = [];
-      if (comment.likedBy.includes(userId)) {
-        // 已经点赞过了，不处理
-        return null;
-      }
-      comment.likedBy.push(userId);
-    }
-    
-    comment.likes = (comment.likes || 0) + 1;
-    await writeAll(siteId, workId, chapterId, all);
-    return comment;
-  }
-  return null;
+export async function createComment(...args) {
+  return getImpl().createComment(...args);
 }
 
-export async function deleteComment({ siteId, workId, chapterId, commentId }) {
-  const all = await readAll(siteId, workId, chapterId);
-  const idx = all.findIndex((c) => c.id === commentId);
-  if (idx !== -1) {
-    all.splice(idx, 1);
-    await writeAll(siteId, workId, chapterId, all);
-    return true;
-  }
-  return false;
+export async function likeComment(...args) {
+  return getImpl().likeComment(...args);
 }
 
-
+export async function deleteComment(...args) {
+  return getImpl().deleteComment(...args);
+}

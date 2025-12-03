@@ -1,16 +1,19 @@
-// 文件存储实现，实现 Storage 接口约定。
+// 非常简单的文件存储实现，用于 demo。
+// 将每个 (siteId, workId, chapterId) 的所有评论存成一个 JSON 数组。
 
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
 
-const DATA_DIR = new URL("./data", import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_DIR = path.join(__dirname, 'data');
 
 function getFilePath(siteId, workId, chapterId) {
   const safeName = `${encodeURIComponent(siteId)}__${encodeURIComponent(
     workId,
   )}__${encodeURIComponent(chapterId)}.json`;
-  return path.join(DATA_DIR.pathname, safeName);
+  return path.join(DATA_DIR, safeName);
 }
 
 async function readAll(siteId, workId, chapterId) {
@@ -24,8 +27,7 @@ async function readAll(siteId, workId, chapterId) {
 }
 
 async function writeAll(siteId, workId, chapterId, comments) {
-  const dir = DATA_DIR.pathname;
-  await fs.mkdir(dir, { recursive: true });
+  await fs.mkdir(DATA_DIR, { recursive: true });
   const file = getFilePath(siteId, workId, chapterId);
   await fs.writeFile(file, JSON.stringify(comments), "utf8");
 }
@@ -51,29 +53,15 @@ export function createFileStorage() {
       return grouped;
     },
 
-    async createComment({
-      siteId,
-      workId,
-      chapterId,
-      paraIndex,
-      content,
-      userName,
-      userId,
-      userAvatar,
-    }) {
+    async createComment(data) {
+      const { siteId, workId, chapterId } = data;
       const all = await readAll(siteId, workId, chapterId);
       const now = new Date().toISOString();
 
+      // 生成 ID
       const comment = {
         id: crypto.randomUUID(),
-        siteId,
-        workId,
-        chapterId,
-        paraIndex,
-        userName: userName || "匿名",
-        userId,
-        userAvatar,
-        content,
+        ...data,
         likes: 0,
         createdAt: now,
       };
@@ -83,17 +71,32 @@ export function createFileStorage() {
       return comment;
     },
 
-    async likeComment({ siteId, workId, chapterId, commentId }) {
+    async likeComment({ siteId, workId, chapterId, commentId, userId }) {
       const all = await readAll(siteId, workId, chapterId);
       const comment = all.find((c) => c.id === commentId);
       if (comment) {
+        if (userId) {
+          if (!comment.likedBy) comment.likedBy = [];
+          if (comment.likedBy.includes(userId)) return null;
+          comment.likedBy.push(userId);
+        }
+        
         comment.likes = (comment.likes || 0) + 1;
         await writeAll(siteId, workId, chapterId, all);
         return comment;
       }
       return null;
     },
+
+    async deleteComment({ siteId, workId, chapterId, commentId }) {
+      const all = await readAll(siteId, workId, chapterId);
+      const idx = all.findIndex((c) => c.id === commentId);
+      if (idx !== -1) {
+        all.splice(idx, 1);
+        await writeAll(siteId, workId, chapterId, all);
+        return true;
+      }
+      return false;
+    }
   };
 }
-
-

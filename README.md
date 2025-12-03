@@ -1,12 +1,12 @@
 # ParaNote
 
-**ParaNote** 是一个轻量级的**段落评论服务**，同时也是一个强大的**通用网页阅读器**。它可以为任何网页提供沉浸式的阅读体验和段落级的评论互动。
+**ParaNote** 是一个轻量级的**段落评论服务**，同时也是一个**通用网页阅读器**。它可以为任何网页提供沉浸式的阅读体验和段落级的评论互动。
 
 ---
 
 ## ✨ 核心特性
 
-- **双重模式**：既是独立的**万能阅读器**，也是可嵌入的**评论插件**。
+- **双重模式**：既是独立的**阅读器**，也是可嵌入的**评论插件**。
 - **段落级评论**：精确到段落的互动，支持点赞和删除。
 - **通用阅读模式**：输入任意 URL (知乎、公众号、博客等)，自动提取正文，生成纯净阅读页面。
 - **强力抗反爬**：内置 Puppeteer + Stealth 插件，自动处理 Cloudflare 验证，支持人机协作过验证码。
@@ -28,9 +28,15 @@
 ```bash
 # 后台启动
 docker-compose up -d
+```
 
-# 查看日志
-docker-compose logs -f
+**配置环境变量 (docker-compose.yml)**
+
+```yaml
+environment:
+  - STORAGE_TYPE=mongo               # 可选: file (默认) 或 mongo
+  - MONGO_URI=mongodb+srv://...      # 如果使用 mongo，必填
+  - ENABLE_PUPPETEER=false           # 可选: false 禁用 Puppeteer 以节省内存
 ```
 
 **或者使用 Docker 命令行**
@@ -185,8 +191,15 @@ ParaNote 使用 CSS 变量定义样式。您可以在自己的 CSS 中覆盖这�
 为了防止文章修改导致评论错位，ParaNote 在保存评论时会记录段落的“内容指纹” (Context Fingerprint)。加载评论时，如果段落索引不匹配，前端会自动全篇搜索指纹，将评论“纠正”到正确的位置。
 
 ### 存储
-默认使用文件系统 (`/data` 目录) 存储 JSON 数据，无需配置数据库。
-接口定义在 `storage.js` 中，可轻松扩展适配 MySQL, Redis 或 MongoDB。
+默认使用文件系统 (`/data` 目录) 存储 JSON 数据。
+**支持 MongoDB**：设置 `STORAGE_TYPE=mongo` 和 `MONGO_URI` 环境变量，即可切换到 MongoDB 存储，适合部署在 Render/Zeabur 等平台。
+
+### 性能优化 (低内存模式)
+如果您的服务器内存不足 (<1GB)，可以设置 `ENABLE_PUPPETEER=false`。
+这将禁用 Chrome 爬虫，仅使用轻量级 Fetch 抓取。
+*   ✅ 内存占用低 (<100MB)
+*   ❌ 无法抓取 Cloudflare 保护的网站
+
 
 ### API 概览
 
