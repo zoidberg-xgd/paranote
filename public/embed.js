@@ -47,6 +47,17 @@
     const container = document.createElement("div");
     container.className = "na-sidebar";
     
+    // Hypothesis 风格配色
+    const styles = {
+        bg: "#f7f7f7",
+        cardBg: "#ffffff",
+        text: "#333",
+        meta: "#707070",
+        border: "#dbdbdb",
+        primary: "#bd1c2b", // Hypothesis 红色
+        shadow: "0 4px 12px rgba(0,0,0,0.15)"
+    };
+
     // 移动端和桌面端不同的样式
     if (isMobile) {
       Object.assign(container.style, {
@@ -55,146 +66,174 @@
         left: "0",
         right: "0",
         width: "100%",
-        maxHeight: "80vh",
-        background: "#fff",
-        borderTop: "1px solid #eee",
-        borderTopLeftRadius: "16px",
-        borderTopRightRadius: "16px",
-        boxShadow: "0 -2px 16px rgba(0,0,0,0.2)",
+        maxHeight: "85vh",
+        background: styles.bg,
+        borderTop: `1px solid ${styles.border}`,
+        borderTopLeftRadius: "12px",
+        borderTopRightRadius: "12px",
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
         fontSize: "14px",
         display: "none",
         flexDirection: "column",
         zIndex: 99999,
         overflow: "hidden",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
       });
     } else {
       Object.assign(container.style, {
         position: "fixed",
-        top: "100px",
-        right: "20px",
-        width: "340px",
-        maxHeight: "calc(100vh - 120px)",
-        background: "#fff",
-        border: "1px solid #e5e5e5",
-        borderRadius: "4px",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+        top: "0",
+        right: "0",
+        width: "380px", // 更宽一点
+        height: "100vh", // 全高
+        background: styles.bg,
+        borderLeft: `1px solid ${styles.border}`,
+        boxShadow: "-2px 0 12px rgba(0,0,0,0.05)",
         fontSize: "14px",
         display: "none",
         flexDirection: "column",
         zIndex: 99999,
         overflow: "hidden",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
       });
     }
 
+    // 顶部栏
     const header = document.createElement("div");
-    header.style.display = "flex";
-    header.style.justifyContent = "space-between";
-    header.style.alignItems = "center";
     Object.assign(header.style, {
-      padding: isMobile ? "14px 16px" : "12px 16px",
-      borderBottom: "1px solid #e5e5e5",
-      background: "#fafafa",
-      fontWeight: "500",
-      fontSize: isMobile ? "15px" : "14px",
-      color: "#333",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "12px 16px",
+      borderBottom: `1px solid ${styles.border}`,
+      background: styles.cardBg,
+      color: styles.text,
+      flexShrink: 0
     });
     
     const titleWrapper = document.createElement("div");
     titleWrapper.style.display = "flex";
     titleWrapper.style.alignItems = "center";
+    titleWrapper.style.gap = "8px";
+    
+    const titleIcon = document.createElement("span");
+    titleIcon.innerHTML = "📝"; // 图标
     
     const title = document.createElement("span");
-    title.textContent = "评论";
-    title.style.fontWeight = "500";
+    title.textContent = "Annotations";
+    title.style.fontWeight = "600";
+    title.style.fontSize = "15px";
     
-    // 评论数量显示（起点风格）
+    // 评论数量显示
     const countSpan = document.createElement("span");
     countSpan.className = "na-comment-header-count";
-    countSpan.style.color = "#999";
-    countSpan.style.fontSize = isMobile ? "13px" : "12px";
-    countSpan.style.fontWeight = "400";
-    countSpan.style.marginLeft = "6px";
+    Object.assign(countSpan.style, {
+        background: "#eee",
+        color: "#666",
+        padding: "2px 8px",
+        borderRadius: "10px",
+        fontSize: "12px",
+        fontWeight: "500"
+    });
     
-    titleWrapper.appendChild(title);
-    titleWrapper.appendChild(countSpan);
+    titleWrapper.append(titleIcon, title, countSpan);
     header.appendChild(titleWrapper);
     
-    // 关闭按钮（起点风格：简洁的 X）
+    // 关闭按钮
     const closeBtn = document.createElement("button");
-    closeBtn.innerHTML = "×";
+    closeBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
     Object.assign(closeBtn.style, {
       background: "transparent",
       border: "none",
-      fontSize: isMobile ? "24px" : "22px",
       cursor: "pointer",
       color: "#999",
-      padding: "0",
-      width: isMobile ? "28px" : "26px",
-      height: isMobile ? "28px" : "26px",
+      padding: "4px",
       display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      borderRadius: "2px",
-      transition: "all 0.15s",
-      lineHeight: "1",
+      borderRadius: "4px",
+      transition: "background 0.2s"
     });
-    closeBtn.onmouseenter = function () {
-      closeBtn.style.background = "#e8e8e8";
-      closeBtn.style.color = "#666";
-    };
-    closeBtn.onmouseleave = function () {
-      closeBtn.style.background = "transparent";
-      closeBtn.style.color = "#999";
-    };
+    closeBtn.onmouseenter = () => closeBtn.style.background = "#f0f0f0";
+    closeBtn.onmouseleave = () => closeBtn.style.background = "transparent";
     closeBtn.onclick = function () {
       container.style.display = "none";
       overlay.style.display = "none";
     };
     header.appendChild(closeBtn);
 
+    // 列表区域
     const list = document.createElement("div");
     Object.assign(list.style, {
-      padding: isMobile ? "0" : "0",
+      padding: "16px",
       flex: "1",
       overflowY: "auto",
-      minHeight: isMobile ? "200px" : "100px",
-      background: "#fff",
+      background: "#f7f7f7", // 灰色背景
+      display: "flex",
+      flexDirection: "column",
+      gap: "12px" // 卡片间距
+    });
+
+    // 输入区域
+    const inputArea = document.createElement("div");
+    Object.assign(inputArea.style, {
+      padding: "16px",
+      borderTop: `1px solid ${styles.border}`,
+      background: styles.cardBg,
+      flexShrink: 0
     });
 
     const textarea = document.createElement("textarea");
+    textarea.placeholder = "添加评论...";
     Object.assign(textarea.style, {
       width: "100%",
-      height: isMobile ? "80px" : "60px",
+      minHeight: "80px",
       boxSizing: "border-box",
-      margin: isMobile ? "8px 16px 4px" : "4px 12px",
-      padding: "8px",
-      border: "1px solid #ddd",
-      borderRadius: "4px",
+      padding: "12px",
+      border: `1px solid ${styles.border}`,
+      borderRadius: "6px",
       fontSize: "14px",
       fontFamily: "inherit",
+      resize: "vertical",
+      outline: "none",
+      transition: "border-color 0.2s, box-shadow 0.2s",
+      marginBottom: "10px"
     });
+    textarea.onfocus = () => {
+        textarea.style.borderColor = styles.primary;
+        textarea.style.boxShadow = `0 0 0 2px rgba(189, 28, 43, 0.1)`;
+    };
+    textarea.onblur = () => {
+        textarea.style.borderColor = styles.border;
+        textarea.style.boxShadow = "none";
+    };
+
+    const btnRow = document.createElement("div");
+    btnRow.style.display = "flex";
+    btnRow.style.justifyContent = "flex-end";
 
     const btn = document.createElement("button");
-    btn.textContent = "发表评论";
+    btn.textContent = "发布";
     Object.assign(btn.style, {
-      width: "calc(100% - " + (isMobile ? "32px" : "24px") + ")",
-      margin: isMobile ? "0 16px 16px" : "0 12px 8px",
-      padding: isMobile ? "12px 0" : "6px 0",
+      padding: "8px 20px",
       border: "none",
-      background: "#f56c6c",
+      background: styles.primary,
       color: "#fff",
       cursor: "pointer",
-      borderRadius: "4px",
-      fontSize: isMobile ? "16px" : "14px",
-      fontWeight: "500",
+      borderRadius: "20px", // 圆角按钮
+      fontSize: "14px",
+      fontWeight: "600",
+      transition: "opacity 0.2s",
+      boxShadow: "0 2px 4px rgba(189, 28, 43, 0.3)"
     });
+    btn.onmouseenter = () => btn.style.opacity = "0.9";
+    btn.onmouseleave = () => btn.style.opacity = "1";
 
     btn.onclick = async function () {
       const content = textarea.value.trim();
       if (!content || currentParaIndex == null) return;
       try {
+        btn.textContent = "发送中...";
+        btn.disabled = true;
         const headers = { "Content-Type": "application/json" };
-        // 如果宿主站点注入了 PARANOTE_TOKEN，则自动带上
         if (typeof window !== "undefined" && window.PARANOTE_TOKEN) {
           headers["X-Paranote-Token"] = window.PARANOTE_TOKEN;
         }
@@ -211,105 +250,23 @@
           }),
         });
         textarea.value = "";
-        // 重新加载所有评论并更新计数
         await loadAllComments();
         updateCommentCounts();
         await loadComments(currentParaIndex, list, sidebar.headerCount);
       } catch (e) {
         console.error("post comment failed", e);
+        alert("发送失败");
+      } finally {
+        btn.textContent = "发布";
+        btn.disabled = false;
       }
     };
-
-    // 输入区域容器（起点风格：简洁）
-    const inputArea = document.createElement("div");
-    Object.assign(inputArea.style, {
-      padding: isMobile ? "14px 16px" : "12px 16px",
-      borderTop: "1px solid #e5e5e5",
-      background: "#fafafa",
-    });
     
-    // 用户头像占位符（起点风格：小头像）
-    const inputHeader = document.createElement("div");
-    inputHeader.style.cssText = "display: flex; align-items: center; margin-bottom: 10px;";
-    
-    const inputAvatar = document.createElement("div");
-    inputAvatar.style.cssText = `
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #f0f0f0;
-      color: #666;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 500;
-      font-size: 14px;
-      margin-right: 10px;
-      flex-shrink: 0;
-      border: 1px solid #e5e5e5;
-    `;
-    inputAvatar.textContent = "我";
-    
-    const inputLabel = document.createElement("span");
-    inputLabel.style.cssText = "color: #999; font-size: 13px;";
-    inputLabel.textContent = "写下你的想法...";
-    
-    inputHeader.appendChild(inputAvatar);
-    inputHeader.appendChild(inputLabel);
-    
-    // 调整 textarea 样式（起点风格）
-    textarea.placeholder = "写下你的想法...";
-    Object.assign(textarea.style, {
-      width: "100%",
-      height: isMobile ? "90px" : "70px",
-      boxSizing: "border-box",
-      margin: "0",
-      padding: "10px 12px",
-      border: "1px solid #e0e0e0",
-      borderRadius: "4px",
-      fontSize: "13px",
-      fontFamily: "inherit",
-      background: "#fff",
-      resize: "none",
-      transition: "border-color 0.15s",
-    });
-    
-    textarea.addEventListener("focus", function () {
-      textarea.style.borderColor = "#f56c6c";
-      textarea.style.outline = "none";
-    });
-    textarea.addEventListener("blur", function () {
-      textarea.style.borderColor = "#e0e0e0";
-    });
-    
-    // 调整按钮样式（起点风格：红色按钮）
-    Object.assign(btn.style, {
-      width: "100%",
-      margin: "10px 0 0",
-      padding: isMobile ? "10px 0" : "8px 0",
-      border: "none",
-      background: "#f56c6c",
-      color: "#fff",
-      cursor: "pointer",
-      borderRadius: "4px",
-      fontSize: isMobile ? "15px" : "14px",
-      fontWeight: "500",
-      transition: "all 0.15s",
-    });
-    
-    btn.addEventListener("mouseenter", function () {
-      btn.style.background = "#ff4757";
-    });
-    btn.addEventListener("mouseleave", function () {
-      btn.style.background = "#f56c6c";
-    });
-    
-    inputArea.appendChild(inputHeader);
-    inputArea.appendChild(textarea);
-    inputArea.appendChild(btn);
+    btnRow.appendChild(btn);
+    inputArea.append(textarea, btnRow);
     
     container.append(header, list, inputArea);
-    return { container, list, headerCount: header.querySelector(".na-comment-header-count") };
+    return { container, list, headerCount: countSpan };
   }
 
   // 缓存所有段落的评论数据
@@ -380,58 +337,71 @@
     
     arr.forEach(function (c, idx) {
       const item = document.createElement("div");
-      item.className = "na-comment-item";
+      item.className = "na-comment-card";
       Object.assign(item.style, {
-        padding: isMobile ? "14px 16px" : "12px 16px",
-        borderBottom: idx < arr.length - 1 ? "1px solid #f0f0f0" : "none",
+        padding: "12px",
+        marginBottom: "0", // gap 由父容器控制
         background: "#fff",
-        transition: "background 0.15s",
-        position: "relative", // 为删除按钮定位
+        borderRadius: "8px",
+        border: "1px solid #eee",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        position: "relative"
       });
       
-      // ... 用户信息行 code ... (keep existing)
-      // 我需要保留之前的代码，这里使用 multi_edit 或者小心替换
-      // 为了方便，我重写整个 arr.forEach 内部逻辑
+      if (!isMobile) {
+          item.addEventListener("mouseenter", () => {
+              item.style.transform = "translateY(-1px)";
+              item.style.boxShadow = "0 4px 8px rgba(0,0,0,0.08)";
+          });
+          item.addEventListener("mouseleave", () => {
+              item.style.transform = "none";
+              item.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)";
+          });
+      }
       
-      // 用户信息行（起点风格：简洁）
+      // 用户信息行
       const userRow = document.createElement("div");
       userRow.style.cssText = "display: flex; align-items: center; margin-bottom: 8px;";
       
-      // 用户头像
+      // 用户头像 (多彩)
       const avatar = document.createElement("div");
       const name = c.userName || c.userId || "匿名";
-      const firstChar = name.length > 0 ? name.charAt(0) : "匿";
+      const firstChar = name.length > 0 ? name.charAt(0).toUpperCase() : "?";
+      
+      // 根据名字生成固定颜色
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      const hue = hash % 360;
+      
       avatar.style.cssText = `
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
-        background: #f0f0f0;
-        color: #666;
+        background: hsl(${hue}, 60%, 85%);
+        color: hsl(${hue}, 60%, 30%);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 500;
-        font-size: 12px;
-        margin-right: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        margin-right: 10px;
         flex-shrink: 0;
-        border: 1px solid #e5e5e5;
+        border: 1px solid rgba(0,0,0,0.05);
       `;
       avatar.textContent = firstChar;
       
       const userInfo = document.createElement("div");
-      userInfo.style.cssText = "flex: 1; min-width: 0;";
+      userInfo.style.cssText = "flex: 1; min-width: 0; display: flex; flex-direction: column;";
       
       const userName = document.createElement("span");
-      userName.style.cssText = "font-weight: 500; color: #333; font-size: 13px; margin-right: 8px;";
+      userName.style.cssText = "font-weight: 600; color: #333; font-size: 13px;";
       userName.textContent = name;
       
       const meta = document.createElement("span");
-      meta.style.cssText = "font-size: 11px; color: #999;";
+      meta.style.cssText = "font-size: 11px; color: #999; margin-top: 2px;";
       const date = c.createdAt ? new Date(c.createdAt).toLocaleString("zh-CN", {
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
+        month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
       }) : "";
       meta.textContent = date;
       
@@ -442,20 +412,39 @@
       
       // 评论内容
       const content = document.createElement("div");
-      content.style.cssText = "color: #333; font-size: 13px; line-height: 1.7; margin-left: 36px; word-break: break-word; padding-top: 4px;";
-      content.textContent = c.content;
+      content.style.cssText = "color: #444; font-size: 14px; line-height: 1.6; word-break: break-word; padding-left: 42px;";
+      
+      // 处理引用内容 (简单markdown blockquote)
+      let contentText = c.content;
+      if (contentText.startsWith("> ")) {
+          const parts = contentText.split("\n");
+          const quoteText = parts[0].substring(2);
+          const mainText = parts.slice(1).join("\n").trim();
+          
+          const blockquote = document.createElement("div");
+          blockquote.style.cssText = "border-left: 3px solid #bd1c2b; padding-left: 8px; color: #777; margin-bottom: 6px; font-size: 13px; background: #f9f9f9; padding: 4px 8px; border-radius: 0 4px 4px 0;";
+          blockquote.textContent = quoteText;
+          content.appendChild(blockquote);
+          
+          const p = document.createElement("div");
+          p.textContent = mainText;
+          content.appendChild(p);
+      } else {
+          content.textContent = contentText;
+      }
       
       // 操作栏（点赞 + 删除）
       const actionContainer = document.createElement("div");
-      actionContainer.style.cssText = "display: flex; justify-content: flex-end; align-items: center; margin-top: 4px;";
+      actionContainer.style.cssText = "display: flex; justify-content: flex-end; align-items: center; margin-top: 8px; padding-left: 42px;";
       
-      // 删除按钮（仅管理员）
+      // 删除按钮
       if (isAdmin) {
         const delBtn = document.createElement("button");
-        delBtn.innerHTML = "删除";
-        delBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#999; font-size:12px; margin-right: 12px;";
-        delBtn.onmouseenter = () => delBtn.style.color = "#f56c6c";
-        delBtn.onmouseleave = () => delBtn.style.color = "#999";
+        delBtn.innerHTML = "🗑️";
+        delBtn.title = "删除";
+        delBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#aaa; font-size:14px; margin-right: 12px; transition:color 0.2s;";
+        delBtn.onmouseenter = () => delBtn.style.color = "#bd1c2b";
+        delBtn.onmouseleave = () => delBtn.style.color = "#aaa";
         delBtn.onclick = async function() {
           if(!confirm("确定删除这条评论吗？")) return;
           try {
@@ -468,14 +457,13 @@
                  body: JSON.stringify({ siteId, workId, chapterId, commentId: c.id })
              });
              if(res.ok) {
-                 // 刷新评论
                  await loadAllComments();
                  updateCommentCounts();
                  await loadComments(paraIndex, listEl, headerCountEl);
              } else {
-                 alert("删除失败，可能是权限不足");
+                 alert("删除失败");
              }
-          } catch(e) { console.error(e); alert("网络错误"); }
+          } catch(e) { console.error(e); }
         };
         actionContainer.appendChild(delBtn);
       }
@@ -483,11 +471,11 @@
       // 点赞按钮
       const likeBtn = document.createElement("button");
       const likes = c.likes || 0;
-      likeBtn.innerHTML = `<span style="font-size:14px">👍</span> <span style="margin-left:4px">${likes}</span>`;
-      likeBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#999; font-size:12px; display:flex; align-items:center; padding: 2px 6px;";
+      likeBtn.innerHTML = `<span style="font-size:14px">❤️</span> <span style="margin-left:4px; font-size:12px;">${likes || ''}</span>`;
+      likeBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#aaa; display:flex; align-items:center; padding: 2px 6px; transition:color 0.2s; border-radius:4px;";
       
-      likeBtn.onmouseenter = () => likeBtn.style.color = "#f56c6c";
-      likeBtn.onmouseleave = () => likeBtn.style.color = "#999";
+      likeBtn.onmouseenter = () => { likeBtn.style.color = "#bd1c2b"; likeBtn.style.background = "#fff0f0"; };
+      likeBtn.onmouseleave = () => { likeBtn.style.color = "#aaa"; likeBtn.style.background = "transparent"; };
 
       likeBtn.onclick = async function() {
           try {
@@ -500,21 +488,13 @@
                  body: JSON.stringify({ siteId, workId, chapterId, commentId: c.id })
              });
              
-             if(res.status === 401) {
-                 alert("请登录后再点赞");
-                 return;
-             }
-             
-             if(res.status === 400) {
-                 // 可能是已点赞，或者参数错误
-                 // 我们假设主要是“已点赞”
-                 alert("您已经点过赞了");
-                 return;
-             }
+             if(res.status === 401) return alert("请登录后再点赞");
+             if(res.status === 400) return alert("您已经点过赞了");
 
              if(res.ok) {
                  const data = await res.json();
-                 likeBtn.innerHTML = `<span style="font-size:14px">👍</span> <span style="margin-left:4px; color:#f56c6c">${data.likes}</span>`;
+                 likeBtn.innerHTML = `<span style="font-size:14px">❤️</span> <span style="margin-left:4px; font-weight:bold; color:#bd1c2b">${data.likes}</span>`;
+                 likeBtn.style.color = "#bd1c2b";
              }
           } catch(e) { console.error(e); }
       };
@@ -524,15 +504,6 @@
       item.appendChild(userRow);
       item.appendChild(content);
       item.appendChild(actionContainer);
-      
-      if (!isMobile) {
-        item.addEventListener("mouseenter", function () {
-          item.style.background = "#fafafa";
-        });
-        item.addEventListener("mouseleave", function () {
-          item.style.background = "#fff";
-        });
-      }
       
       listEl.appendChild(item);
     });
