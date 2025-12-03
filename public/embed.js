@@ -422,12 +422,23 @@
         
         // 检查当前用户权限
         let isAdmin = false;
+        let isAuthor = false;
         let token = null;
+        let editToken = null;
+        
         if (typeof window !== "undefined" && window.PARANOTE_TOKEN) {
           token = window.PARANOTE_TOKEN;
           const payload = parseJwt(token);
           if (payload && (payload.role === 'admin' || payload.isAdmin === true)) {
             isAdmin = true;
+          }
+        }
+        
+        // 检查是否是文章作者（支持多种方式：TAPNOTE_EDIT_TOKEN 或 PARANOTE_EDIT_TOKEN 或 data-edit-token）
+        if (typeof window !== "undefined") {
+          editToken = window.TAPNOTE_EDIT_TOKEN || window.PARANOTE_EDIT_TOKEN || script.dataset.editToken;
+          if (editToken) {
+            isAuthor = true;
           }
         }
         
@@ -546,11 +557,11 @@
           const actionContainer = document.createElement("div");
           actionContainer.style.cssText = "display: flex; justify-content: flex-end; align-items: center; margin-top: 8px; padding-left: 42px;";
           
-          // 删除按钮
-          if (isAdmin) {
+          // 删除按钮（管理员或作者都可以删除）
+          if (isAdmin || isAuthor) {
             const delBtn = document.createElement("button");
             delBtn.innerHTML = "🗑️";
-            delBtn.title = "删除";
+            delBtn.title = isAuthor ? "删除（作者）" : "删除（管理员）";
             delBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#aaa; font-size:14px; margin-right: 12px; transition:color 0.2s;";
             delBtn.onmouseenter = () => delBtn.style.color = "#bd1c2b";
             delBtn.onmouseleave = () => delBtn.style.color = "#aaa";
@@ -560,19 +571,28 @@
                  const headers = { "Content-Type": "application/json" };
                  if (token) headers["X-Paranote-Token"] = token;
                  
+                 const deleteData = { siteId, workId, chapterId, commentId: c.id };
+                 if (editToken) {
+                   deleteData.editToken = editToken;
+                 }
+                 
                  const res = await fetch(apiBase + "/api/v1/comments", {
                      method: "DELETE",
                      headers,
-                     body: JSON.stringify({ siteId, workId, chapterId, commentId: c.id })
+                     body: JSON.stringify(deleteData)
                  });
                  if(res.ok) {
                      await loadAllComments();
                      updateCommentCounts();
                      await loadComments(paraIndex, listEl, headerCountEl);
                  } else {
-                     alert("删除失败");
+                     const errorData = await res.json().catch(() => ({}));
+                     alert(errorData.error || "删除失败");
                  }
-              } catch(e) { console.error(e); }
+              } catch(e) { 
+                 console.error(e);
+                 alert("删除失败");
+              }
             };
             actionContainer.appendChild(delBtn);
           }
