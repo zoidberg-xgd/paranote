@@ -337,8 +337,9 @@ const server = http.createServer(async (req, res) => {
          if (ip) {
              const ipHash = crypto.createHash('md5').update(ip + siteId).digest('hex');
              userId = `ip_${ipHash}`;
-             // 如果用户没有自己填名字，或者名字是默认的 "匿名"，则分配一个访客名
-             if (!finalUserName || finalUserName === "匿名") {
+             // 如果用户明确提供了"匿名"作为userName，则分配一个访客名
+             // 如果JWT无效且没有提供userName，则使用"匿名"（不分配访客名）
+             if (finalUserName === "匿名") {
                  finalUserName = `访客-${ipHash.substring(0, 6)}`;
              }
          }
