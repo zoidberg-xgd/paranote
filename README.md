@@ -1,26 +1,138 @@
-PNe是个轻量级的**落评论服务**同时也是一个强大的**通用网页阅读器**。它为任何网页提供沉浸式的阅读体验和落级的互动✨ 核心双重模式**：既是独立的**万能阅读器**，也是可嵌入的**评论插件**。
-- **精确到段落的互动，支持点赞和删除。
--**通用阅读模式**：输入任意URL(知乎、公众号、博客等)，自动提取正文，生成纯净阅读页面。
--**强力抗反爬**：内置PupeeStelth 插件，自动处理 Clouflar验证，支持人机协作过验证码。采用内容指纹定位，原或改版归。现代 UI 设计**：。体验流畅。原样导入优化针对SPA如 移除干扰脚本强制展开折叠内容。
---
+# ParaNote
 
-##📖模式一：aNt阅读器(独立使用)
-作为一个独立的Wb服务运为你提供带的纯净阅读体验。###1.启动服务
+**ParaNote** 是一个轻量级的**段落评论服务**，同时也是一个强大的**通用网页阅读器**。它可以为任何网页提供沉浸式的阅读体验和段落级的评论互动。
 
-``ah
-#本地启动npminstall
-npmsrt
-#运行在http://localh:4000
+---
+
+## ✨ 核心特性
+
+- **双重模式**：既是独立的**万能阅读器**，也是可嵌入的**评论插件**。
+- **段落级评论**：精确到段落的互动，支持点赞和删除。
+- **通用阅读模式**：输入任意 URL (知乎、公众号、博客等)，自动提取正文，生成纯净阅读页面。
+- **强力抗反爬**：内置 Puppeteer + Stealth 插件，自动处理 Cloudflare 验证，支持人机协作过验证码。
+- **模糊定位 (Fuzzy Anchoring)**：采用内容指纹定位，即使原文段落增删或改版，评论也能自动归位，不再错位。
+- **现代 UI 设计**：Hypothesis 风格的卡片式侧边栏，支持多彩头像、Markdown 引用和丝滑动画。
+- **移动端适配**：专为手机优化的底部抽屉交互，体验流畅。
+- **原样导入优化**：针对 SPA (如知乎) 自动移除干扰脚本并强制展开折叠内容。
+
+---
+
+## 📖 模式一：ParaNote 阅读器 (独立使用)
+
+作为一个独立的 Web 服务运行，为你提供带评论功能的纯净阅读体验。
+
+### 1. 启动服务
+
+**本地启动**
+
+```bash
+npm install
+npm start
+# 默认运行在 http://localhost:4000
 ```
 
-或者使用 Docke 部署：
+**或者使用 Docker 部署**
 
-```bahdockerbuildtpn.
-ockr un -d -p 4000:4000 -v$(pw/data:/app/data pn
-```2使用部署好的地址，输入目标文章链接即可sexampe.cm/ric
--特点提取正文，和，重新排版适合长阅读抗反爬服务启浏览器尝试绕过。如果需要码器端（如果是本地运行且PUPPETEER_HEDLE=f会弹出窗口让你点击。**原样导入模式**:pot?=sexmpe.cmricle`   **特点**：保留网页原始样式，适合排版复杂的页面 (如 Wiipedia)。   - **优化**：自动移除原网的JS防止冲突，并强制展开被折叠的内容(如知乎回答)。
-- **Telegraph专线**:/<Sug> -**特**针对Telegr.ph深度优化🔌模式二：ParaNote插件(嵌入使用)长想博客或小说，只需两步。### 
-以及标识：### 
-your--domin.coyour--domin.co用户鉴权 (可选)支持通过JWT对接现有用户后端生成JW并注入页面hml<i>wiwARANTE_OKEN=yJhGiOiJUz1i...;<ip自动读取并识别用户身份(UD, , )🛠技术细节###模糊定位(FuzzyArig)为了防止文章修改导致评论错位，N在保存时会记录段落的“内容指纹”(CxFigrt加载评论时，如果段落索引不匹配，前端会自动全篇搜索指纹，将评论“纠正”到正确的位置。#存储
-默认使用文件系统 (`/da`目录) 存储 JON数据，无需配置数据库。
-义在.j`中，可轻松扩展适配MySQL,R或MDB。###AP概览-`GET//v1/`获取评论-`POST//v1/m`发布评论-`OT/v1//l:点赞DELETE/p/v1/mn`:删除需管理员权限🧪开发与测试运行测试项目包含完整的AP单元测试(基于Vs)ah###目录结构`v:核心服务(H,u, API`pb/mbj`:前端挂件源码`ub/.h`:首页入口-`og:存储层抽象
+```bash
+docker build -t paranote .
+docker run -d -p 4000:4000 -v $(pwd)/data:/app/data paranote
+```
+
+### 2. 使用方式
+
+访问部署好的地址，输入目标文章链接即可：
+
+- **通用阅读模式**: `http://localhost:4000/read?url=https://example.com/article`
+    - **特点**：提取正文，去除广告和侧边栏，重新排版，适合长文阅读。
+    - **抗反爬**：如果遇到 Cloudflare，服务器会自动启动浏览器尝试绕过。如果需要验证码，服务器端（如果是本地运行且 `PUPPETEER_HEADLESS=false`）会弹出窗口让你点击。
+
+- **原样导入模式**: `http://localhost:4000/import?url=https://example.com/article`
+    - **特点**：保留网页原始样式，适合排版复杂的页面 (如 Wikipedia)。
+    - **优化**：自动移除原网页的 JS 防止冲突，并强制展开被折叠的内容 (如知乎回答)。
+
+- **Telegra.ph 专线**: `http://localhost:4000/p/<Slug>`
+    - **特点**：针对 Telegra.ph 的深度优化。
+
+---
+
+## 🔌 模式二：ParaNote 插件 (嵌入式使用)
+
+如果您是站长，想让您的博客或小说站拥有段落评论功能，只需两步。
+
+### 1. 标记正文
+
+找到包裹文章内容的 HTML 容器，添加 `data-na-root` 以及唯一标识 ID：
+
+```html
+<div class="article-content"
+  data-na-root
+  data-work-id="novel_001"
+  data-chapter-id="chapter_001"
+>
+  <p>正文第一段...</p>
+  <p>正文第二段...</p>
+</div>
+```
+
+### 2. 引入脚本
+
+在页面底部引入 ParaNote 脚本：
+
+```html
+<script
+  async
+  src="https://your-paranote-domain.com/public/embed.js"
+  data-site-id="my-site"
+  data-api-base="https://your-paranote-domain.com"
+></script>
+```
+
+### 用户鉴权 (可选)
+
+支持通过 JWT 对接您现有的用户系统。后端生成 JWT 并注入页面：
+
+```html
+<script>
+  window.PARANOTE_TOKEN = "eyJhbGciOiJIUzI1Ni...";
+</script>
+```
+
+ParaNote 会自动读取 Token 并识别用户身份 (User ID, Name, Avatar)。
+
+---
+
+## 🛠 技术细节
+
+### 模糊定位 (Fuzzy Anchoring)
+为了防止文章修改导致评论错位，ParaNote 在保存评论时会记录段落的“内容指纹” (Context Fingerprint)。加载评论时，如果段落索引不匹配，前端会自动全篇搜索指纹，将评论“纠正”到正确的位置。
+
+### 存储
+默认使用文件系统 (`/data` 目录) 存储 JSON 数据，无需配置数据库。
+接口定义在 `storage.js` 中，可轻松扩展适配 MySQL, Redis 或 MongoDB。
+
+### API 概览
+
+- `GET /api/v1/comments`: 获取评论
+- `POST /api/v1/comments`: 发布评论
+- `POST /api/v1/comments/like`: 点赞
+- `DELETE /api/v1/comments`: 删除 (需管理员权限)
+
+---
+
+## 🧪 开发与测试
+
+### 运行测试
+项目包含完整的 API 单元测试 (基于 Vitest)。
+
+```bash
+npm test
+```
+
+### 目录结构
+- `server.js`: 核心服务 (HTTP, Puppeteer, API)
+- `public/embed.js`: 前端挂件源码
+- `public/index.html`: 首页入口
+- `storage.js`: 存储层抽象
+
+## License
+MIT
