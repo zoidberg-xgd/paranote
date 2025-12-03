@@ -1,0 +1,21 @@
+{
+  "name": "paranote",
+  "version": "0.1.0",
+  "description": "ParaNote: Lightweight paragraph comments service for novel and article sites",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "comments",
+    "annotation",
+    "novel",
+    "paragraph"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {}
+}
+
+
