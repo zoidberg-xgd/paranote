@@ -99,6 +99,74 @@ docker run -d -p 4000:4000 -v $(pwd)/data:/app/data paranote
 
 ParaNote 会自动读取 Token 并识别用户身份 (User ID, Name, Avatar)。
 
+### 📚 站长集成指南 (Advanced)
+
+#### 1. 脚本配置参数
+
+通过 `<script>` 标签的 `data-*` 属性进行配置：
+
+| 属性名 | 必填 | 默认值 | 说明 |
+| :--- | :---: | :--- | :--- |
+| `src` | 是 | - | 必须指向 `embed.js` 的 URL |
+| `data-site-id` | 是 | `default-site` | 站点唯一标识，用于隔离不同网站的数据 |
+| `data-api-base` | 是 | 自动推导 | 后端 API 地址。如果脚本和 API 在同一域名下可省略 |
+
+#### 2. JWT 生成示例
+
+Token 是一个标准的 HS256 JWT，Payload 必须包含 `siteId` 和 `sub`。
+
+**Node.js**
+```js
+const jwt = require('jsonwebtoken');
+const token = jwt.sign({
+  siteId: 'my-site',
+  sub: user.id,
+  name: user.username,
+  avatar: user.avatarUrl
+}, process.env.PARANOTE_SECRET);
+```
+
+**Python (Flask/Django)**
+```python
+import jwt
+import time
+
+token = jwt.encode({
+    "siteId": "my-site",
+    "sub": str(user.id),
+    "name": user.username,
+    "exp": int(time.time()) + 3600
+}, "YOUR_SECRET", algorithm="HS256")
+```
+
+**PHP**
+```php
+use Firebase\JWT\JWT;
+$payload = [
+    "siteId" => "my-site",
+    "sub" => $user->id,
+    "name" => $user->username
+];
+$token = JWT::encode($payload, $secret_key, 'HS256');
+```
+
+#### 3. 样式定制
+
+ParaNote 使用 CSS 变量定义样式。您可以在自己的 CSS 中覆盖这些变量来适配网站主题：
+
+```css
+:root {
+  /* 侧边栏颜色 */
+  --na-bg: #f7f7f7;          /* 背景色 */
+  --na-card-bg: #ffffff;     /* 卡片背景 */
+  --na-primary: #bd1c2b;     /* 主题色 (按钮、高亮) */
+  --na-text: #333333;        /* 文字颜色 */
+  
+  /* 侧边栏尺寸 */
+  --na-sidebar-width: 380px;
+}
+```
+
 ---
 
 ## 🛠 技术细节
