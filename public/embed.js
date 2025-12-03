@@ -667,8 +667,8 @@
     // 移动端也支持 touchstart（防止双击缩放）
     if (isMobile) {
       p.addEventListener("touchend", function (e) {
-        e.preventDefault();
-        handleClick(e);
+        // e.preventDefault(); // 保持默认行为以免影响选中
+        // handleClick(e);
       }, { passive: false });
     }
   });
@@ -678,5 +678,4 @@
     updateCommentCounts();
   });
 })();
-
 
