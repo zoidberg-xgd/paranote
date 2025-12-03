@@ -19,7 +19,7 @@ Lightweight **paragraph comments** service and embed widget for novel and articl
 
 ## 目录结构
 
-- `server.js` - 极简 Node.js HTTP 服务，提供 `/comments` API
+- `server.js` - 极简 Node.js HTTP 服务，提供 `/api/v1/comments` API
 - `storage.js` - Storage 统一出口，提供 `getStorage()/setStorage()`
 - `storage-file.js` - 默认的文件存储实现
 - `public/embed.js` - 浏览器端嵌入脚本源码（ParaNote 挂件）
@@ -111,7 +111,7 @@ curl http://localhost:4000/health
 
 ### 获取评论
 
-`GET /comments?siteId=...&workId=...&chapterId=...`
+`GET /api/v1/comments?siteId=...&workId=...&chapterId=...`
 
 返回：
 
@@ -136,7 +136,7 @@ curl http://localhost:4000/health
 
 ### 新增评论
 
-`POST /comments`
+`POST /api/v1/comments`
 
 请求体（无用户系统时）：
 
@@ -154,7 +154,7 @@ curl http://localhost:4000/health
 如果对接了站点用户系统，则推荐使用 JWT：
 
 ```http
-POST /comments
+POST /api/v1/comments
 Content-Type: application/json
 X-Paranote-Token: <你的站点生成的 JWT>
 ```
@@ -165,7 +165,7 @@ ParaNote 会从 `X-Paranote-Token` 里解析出 `sub/name/avatar/siteId` 等信�
 
 ### 点赞评论
 
-`POST /comments/like`
+`POST /api/v1/comments/like`
 
 请求体：
 
@@ -182,7 +182,7 @@ ParaNote 会从 `X-Paranote-Token` 里解析出 `sub/name/avatar/siteId` 等信�
 
 ### 删除评论（管理员）
 
-`DELETE /comments`
+`DELETE /api/v1/comments`
 
 请求体：
 

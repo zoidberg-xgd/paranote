@@ -2,6 +2,7 @@
 // GET  /comments?siteId=&workId=&chapterId=
 // POST /comments { siteId, workId, chapterId, paraIndex, content, userName? }
 
+import "dotenv/config";
 import http from "node:http";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
@@ -12,6 +13,12 @@ import { listComments, createComment, likeComment, deleteComment } from "./stora
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = process.env.PORT || 4000;
+let SITE_SECRETS = {};
+try {
+  SITE_SECRETS = JSON.parse(process.env.SITE_SECRETS || '{}');
+} catch (e) {
+  console.error("Failed to parse SITE_SECRETS from env", e);
+}
 
 function sendJson(res, statusCode, data) {
   const body = JSON.stringify(data);
@@ -24,11 +31,6 @@ function sendJson(res, statusCode, data) {
   res.end(body);
 }
 
-// 站点密钥配置：真实环境建议从环境变量或配置文件中读取
-// key 为 siteId，value 为对应的 HS256 密钥
-const SITE_SECRETS = {
-  "demo-site": "demo-site-secret-change-me",
-};
 
 function base64UrlDecode(str) {
   const pad = 4 - (str.length % 4 || 4);
@@ -124,7 +126,7 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  if (url.pathname === "/comments" && req.method === "GET") {
+  if (url.pathname === "/api/v1/comments" && req.method === "GET") {
     const siteId = url.searchParams.get("siteId");
     const workId = url.searchParams.get("workId");
     const chapterId = url.searchParams.get("chapterId");
@@ -142,7 +144,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  if (url.pathname === "/comments" && req.method === "POST") {
+  if (url.pathname === "/api/v1/comments" && req.method === "POST") {
     let body;
     try {
       body = await parseBody(req);
@@ -197,7 +199,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  if (url.pathname === "/comments/like" && req.method === "POST") {
+  if (url.pathname === "/api/v1/comments/like" && req.method === "POST") {
     let body;
     try {
       body = await parseBody(req);
@@ -245,7 +247,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  if (url.pathname === "/comments" && req.method === "DELETE") {
+  if (url.pathname === "/api/v1/comments" && req.method === "DELETE") {
     let body;
     try {
       body = await parseBody(req);

@@ -199,7 +199,7 @@
           headers["X-Paranote-Token"] = window.PARANOTE_TOKEN;
         }
 
-        await fetch(apiBase + "/comments", {
+        await fetch(apiBase + "/api/v1/comments", {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -319,7 +319,7 @@
     try {
       const url =
         apiBase +
-        "/comments?siteId=" +
+        "/api/v1/comments?siteId=" +
         encodeURIComponent(siteId) +
         "&workId=" +
         encodeURIComponent(workId) +
@@ -462,7 +462,7 @@
              const headers = { "Content-Type": "application/json" };
              if (token) headers["X-Paranote-Token"] = token;
              
-             const res = await fetch(apiBase + "/comments", {
+             const res = await fetch(apiBase + "/api/v1/comments", {
                  method: "DELETE",
                  headers,
                  body: JSON.stringify({ siteId, workId, chapterId, commentId: c.id })
@@ -494,7 +494,7 @@
              const headers = { "Content-Type": "application/json" };
              if (token) headers["X-Paranote-Token"] = token;
              
-             const res = await fetch(apiBase + "/comments/like", {
+             const res = await fetch(apiBase + "/api/v1/comments/like", {
                  method: "POST",
                  headers,
                  body: JSON.stringify({ siteId, workId, chapterId, commentId: c.id })
