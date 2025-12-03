@@ -18,7 +18,12 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "^17.2.3"
+    "@mozilla/readability": "^0.6.0",
+    "dotenv": "^17.2.3",
+    "jsdom": "^27.2.0",
+    "puppeteer": "^24.32.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

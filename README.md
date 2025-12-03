@@ -9,11 +9,36 @@ Lightweight **paragraph comments** service and embed widget for novel and articl
 ## 特性
 
 - **段落级评论**：按 `siteId + workId + chapterId + paraIndex` 精确定位到具体段落
+- **通用阅读模式**：输入任意文章 URL (知乎、公众号、博客等)，自动提取正文并生成纯净阅读页面，自带评论区
+- **强力抗反爬**：集成 Puppeteer Stealth，自动绕过 Cloudflare 等反爬验证，支持 Cloudflare 挑战页手动点击
+- **Telegra.ph 专线**：针对 Telegra.ph 文章进行深度优化，排版更完美
 - **热度排序**：评论自动按点赞数排序，支持点赞功能
 - **权限管理**：支持 JWT 鉴权，管理员可删除评论，点赞需登录且防止刷赞
 - **前后端解耦**：后端提供简单 HTTP API，前端通过 `embed.js` 以挂件形式接入
 - **可替换存储**：通过 `Storage` 接口抽象，默认文件存储，可扩展到 Postgres / KV / 边缘函数
 - **对接简单**：对接站点只需两步：标记正文容器 + 引入脚本
+
+---
+
+## ParaNote 阅读器 (Reader Mode)
+
+ParaNote 不仅仅是一个评论插件，还是一个**自带评论区的万能文章阅读器**。
+
+### 1. 访问方式
+
+启动服务后，通过以下 URL 访问：
+
+- **通用阅读模式**: `http://localhost:4000/read?url=<目标文章URL>`
+- **Telegra.ph 专用**: `http://localhost:4000/p/<Telegraph-Slug>` (会自动识别并跳转)
+
+### 2. 工作原理
+
+1.  **自动提取**：使用 `Readability` 算法去除广告、侧边栏，只保留文章正文。
+2.  **智能抓取**：
+    - 优先使用轻量级请求抓取。
+    - 若遇反爬 (403/Cloudflare)，自动启动 **Puppeteer (Chrome)** 模拟真实浏览器。
+    - **人机协作**：如果遇到 Cloudflare 验证码，浏览器窗口会自动弹出，请**手动点击**验证，验证通过后系统会自动抓取内容并关闭窗口。
+3.  **评论挂载**：在生成的纯净页面上自动挂载 ParaNote 评论系统。
 
 ---
 

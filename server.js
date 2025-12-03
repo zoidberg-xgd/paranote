@@ -8,7 +8,13 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { JSDOM } from "jsdom";
+import { Readability } from "@mozilla/readability";
+import puppeteer from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { listComments, createComment, likeComment, deleteComment } from "./storage.js";
+
+puppeteer.use(StealthPlugin());
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,6 +24,83 @@ try {
   SITE_SECRETS = JSON.parse(process.env.SITE_SECRETS || '{}');
 } catch (e) {
   console.error("Failed to parse SITE_SECRETS from env", e);
+}
+
+
+// 智能抓取函数：优先 fetch，失败降级为 Puppeteer
+async function fetchPageContent(targetUrl) {
+  // 1. 尝试普通 fetch
+  try {
+    const resp = await fetch(targetUrl, {
+      headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+          'Sec-Ch-Ua-Mobile': '?0',
+          'Sec-Ch-Ua-Platform': '"macOS"',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Upgrade-Insecure-Requests': '1'
+      }
+    });
+
+    if (resp.status === 403 || resp.status === 401 || resp.status === 503) {
+       throw new Error(`Status ${resp.status}`);
+    }
+    
+    if (!resp.ok) throw new Error(`Status ${resp.status}`);
+    
+    return await resp.text();
+  } catch (e) {
+    console.log(`Fetch failed (${e.message}), fallback to Puppeteer...`);
+    
+    // 2. 降级使用 Puppeteer
+    // 开启有头模式 (headless: false)，方便人工处理 Cloudflare 验证
+    const browser = await puppeteer.launch({
+      headless: false,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    
+    try {
+      const page = await browser.newPage();
+      await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+      await page.setViewport({ width: 1280, height: 800 });
+      
+      // 访问页面，等待网络空闲
+      await page.goto(targetUrl, { 
+        waitUntil: 'networkidle2',
+        timeout: 60000 // 增加总超时时间到 60s
+      });
+
+      // 智能等待：如果检测到 Cloudflare 验证页，循环等待直到通过
+      // 最多等 60 秒
+      const startTime = Date.now();
+      while (Date.now() - startTime < 60000) {
+          const content = await page.content();
+          // Cloudflare 常见的验证关键词
+          if (content.includes("Just a moment") || content.includes("Verify you are human") || content.includes("Checking your browser")) {
+              // console.log("Waiting for Cloudflare challenge...");
+              await new Promise(r => setTimeout(r, 1000)); // 等待 1 秒
+          } else {
+              break; // 验证通过，跳出循环
+          }
+      }
+      
+      // 给一点额外的缓冲时间让正文渲染
+      await new Promise(r => setTimeout(r, 2000));
+      
+      // 获取渲染后的 HTML
+      const content = await page.content();
+      return content;
+    } finally {
+      await browser.close();
+    }
+  }
 }
 
 function sendJson(res, statusCode, data) {
@@ -224,12 +307,6 @@ const server = http.createServer(async (req, res) => {
       
       // 如果要求“一个用户只能点赞一次”，则必须登录
       if (!userId) {
-         // 这里可以选择是否允许匿名无限赞。根据需求“一个用户对一个评价只能点赞一次”，
-         // 匿名用户无法区分，为了安全可以禁止匿名点赞，或者允许匿名点赞但不去重。
-         // 这里我们选择：如果没有登录，就无法通过 ID 去重，因此暂时禁止匿名点赞，或者给一个 warning。
-         // 为了体验，如果未登录，我们暂时允许（不传 userId），但无法去重。
-         // 但用户明确说“这不对”，所以最好是限制。
-         // 简单起见：未登录无法点赞。
          return sendJson(res, 401, { error: "login_required_to_like" });
       }
 
@@ -237,8 +314,6 @@ const server = http.createServer(async (req, res) => {
       if (updated) {
         return sendJson(res, 200, { likes: updated.likes });
       } else {
-        // 如果 updated 为 null，可能是找不到评论，或者已经点过赞
-        // 区分一下不太容易，这里简化处理
         return sendJson(res, 400, { error: "already_liked_or_not_found" });
       }
     } catch (e) {
@@ -288,7 +363,230 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // 网页导入功能
+  // Telegra.ph 专用代理路由
+  // 匹配 /p/xxxx-xx-xx
+  const pMatch = url.pathname.match(/^\/p\/(.+)$/);
+  if (pMatch && req.method === "GET") {
+    const slug = pMatch[1];
+    
+    try {
+      const apiUrl = `https://api.telegra.ph/getPage/${slug}?return_content=true`;
+      const apiResp = await fetch(apiUrl);
+      const apiJson = await apiResp.json();
+
+      if (!apiJson.ok) {
+        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        return res.end("Telegra.ph 文章未找到或 API 错误");
+      }
+
+      const page = apiJson.result;
+      
+      // 辅助函数：将 Telegraph 节点转换为 HTML
+      function renderNode(node) {
+        if (typeof node === 'string') return node;
+        if (!node.tag) return '';
+        
+        const children = (node.children || []).map(renderNode).join('');
+        const attrs = Object.entries(node.attrs || {})
+          .map(([k, v]) => {
+             if (k === 'src' && v.startsWith('/')) {
+               return `${k}="https://telegra.ph${v}"`;
+             }
+             return `${k}="${v}"`;
+          })
+          .join(' ');
+        
+        // 对于 void 元素
+        if (['img', 'br', 'hr'].includes(node.tag)) {
+          return `<${node.tag} ${attrs} />`;
+        }
+        
+        return `<${node.tag} ${attrs}>${children}</${node.tag}>`;
+      }
+
+      const contentHtml = page.content.map(renderNode).join('');
+      
+      // 构建最终 HTML
+      const html = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${page.title} - ParaNote Reader</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.8;
+      color: #333;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    article {
+      background: #fff;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    h1 { margin-top: 0; font-size: 2em; }
+    img { max-width: 100%; height: auto; border-radius: 4px; }
+    blockquote {
+      border-left: 4px solid #ddd;
+      margin: 0;
+      padding-left: 1em;
+      color: #666;
+    }
+    .na-comment-btn { opacity: 0.3; transition: opacity 0.2s; }
+    .na-comment-btn:hover { opacity: 1; }
+  </style>
+</head>
+<body data-na-root data-site-id="telegraph-proxy" data-work-id="${slug}" data-chapter-id="index">
+  <article>
+    <h1>${page.title}</h1>
+    <div style="color: #888; margin-bottom: 20px;">
+      ${page.author_name ? `By ${page.author_name}` : ''}
+    </div>
+    <div class="content">
+      ${contentHtml}
+    </div>
+  </article>
+  <script 
+    async
+    src="/public/embed.js" 
+    data-site-id="telegraph-proxy" 
+    data-api-base="${url.origin}"
+  ></script>
+</body>
+</html>
+      `;
+
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+
+    } catch (e) {
+      console.error(e);
+      res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+      return res.end("Internal Error: " + e.message);
+    }
+  }
+
+  // 通用网页阅读模式路由
+  if (url.pathname === "/read" && req.method === "GET") {
+    const targetUrl = url.searchParams.get("url");
+    if (!targetUrl) {
+      res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
+      return res.end("请输入 URL，例如 /read?url=https://example.com");
+    }
+
+    try {
+      const targetObj = new URL(targetUrl);
+      
+      // 智能优化：如果是 Telegra.ph 链接，直接重定向到专用路由
+      if (targetObj.hostname.includes("telegra.ph") && targetObj.pathname !== "/") {
+          // 提取 slug，去除开头的 /
+          const slug = targetObj.pathname.replace(/^\//, '');
+          res.writeHead(302, { "Location": `/p/${slug}` });
+          return res.end();
+      }
+
+      // 使用智能抓取（自动降级 Puppeteer）
+      const htmlRaw = await fetchPageContent(targetUrl);
+      
+      const dom = new JSDOM(htmlRaw, { url: targetUrl });
+      const reader = new Readability(dom.window.document);
+      const article = reader.parse();
+
+      if (!article) {
+         throw new Error("无法提取正文内容");
+      }
+
+      const hostname = new URL(targetUrl).hostname;
+      const workId = "r_" + crypto.createHash('md5').update(targetUrl).digest('hex');
+
+      const html = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${article.title || '无标题'} - ParaNote Reader</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.8;
+      color: #333;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    article {
+      background: #fff;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    h1 { margin-top: 0; font-size: 2em; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
+    img { max-width: 100%; height: auto; display: block; margin: 20px auto; border-radius: 4px; }
+    a { color: #f56c6c; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    blockquote {
+      border-left: 4px solid #f56c6c;
+      margin: 20px 0;
+      padding-left: 16px;
+      color: #666;
+      background: #fff9f9;
+      padding: 10px 16px;
+    }
+    pre { background: #f4f4f4; padding: 15px; overflow-x: auto; border-radius: 4px; }
+    .na-comment-btn { opacity: 0.3; transition: opacity 0.2s; }
+    .na-comment-btn:hover { opacity: 1; }
+    .source-link {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        font-size: 14px;
+        color: #999;
+    }
+  </style>
+</head>
+<body data-na-root data-site-id="paranote-reader" data-work-id="${workId}" data-chapter-id="index">
+  <article>
+    <h1>${article.title || '无标题'}</h1>
+    <div style="color: #888; margin-bottom: 30px; font-size: 0.9em;">
+      ${article.byline ? `<span>${article.byline}</span> • ` : ''}
+      <span>${hostname}</span>
+    </div>
+    <div class="content">
+      ${article.content}
+    </div>
+    <div class="source-link">
+        原文链接：<a href="${targetUrl}" target="_blank">${targetUrl}</a>
+    </div>
+  </article>
+  <script 
+    async
+    src="/public/embed.js" 
+    data-site-id="paranote-reader" 
+    data-api-base="${url.origin}"
+  ></script>
+</body>
+</html>
+      `;
+
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      return res.end(html);
+
+    } catch (e) {
+       console.error("Reader Error:", e);
+       res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+       return res.end("阅读模式转换失败: " + e.message);
+    }
+  }
+
+  // 网页导入功能 (fallback)
   if (url.pathname === "/import" && req.method === "GET") {
       const targetUrl = url.searchParams.get("url");
       if (!targetUrl) {
@@ -311,28 +609,19 @@ const server = http.createServer(async (req, res) => {
           if (!resp.ok) throw new Error(`Failed to fetch: ${resp.status} ${resp.statusText}`);
           
           let html = await resp.text();
-          const origin = new URL(targetUrl).origin;
-          
-          // 1. 注入 Base Tag 解决相对路径资源问题
           if (!html.includes("<base")) {
               html = html.replace("<head>", `<head><base href="${targetUrl}">`);
           }
 
-          // 2. 生成唯一的 ID
           const workId = crypto.createHash('md5').update(new URL(targetUrl).hostname).digest('hex');
           const chapterId = crypto.createHash('md5').update(targetUrl).digest('hex');
 
-          // 3. 给 body 注入标记
           html = html.replace("<body", `<body data-na-root data-site-id="imported" data-work-id="${workId}" data-chapter-id="${chapterId}"`);
 
-          // 4. 注入 embed.js
           const script = `
           <script>
-             // 简单的防跨域资源报错抑制 (可选)
              window.addEventListener('error', function(e) {
-                 if(e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT') {
-                     // console.log('Resource load error suppressed');
-                 }
+                 if(e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT') {}
              }, true);
           </script>
           <script 
@@ -342,14 +631,11 @@ const server = http.createServer(async (req, res) => {
             data-api-base="${url.origin}"
           ></script>
           <style>
-            /* 强制侧边栏最高层级 */
             .na-sidebar, .na-overlay { z-index: 2147483647 !important; }
-            /* 给所有段落增加显式间隔，方便点击 */
             p { margin-bottom: 1em; }
           </style>
           `;
           
-          // 插入到 body 结束标签前，或者 html 结束标签前
           if (html.includes("</body>")) {
               html = html.replace("</body>", script + "</body>");
           } else {
@@ -367,7 +653,6 @@ const server = http.createServer(async (req, res) => {
 
   // 静态文件服务
   if (req.method === "GET") {
-    // 根路径返回导入器页面
     if (url.pathname === "/") {
       const filePath = path.join(__dirname, "public", "index.html");
       try {
@@ -379,7 +664,6 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // 示例页面
     if (url.pathname === "/example") {
       const filePath = path.join(__dirname, "example", "index.html");
       try {
@@ -396,7 +680,6 @@ const server = http.createServer(async (req, res) => {
       return res.end("ok");
     }
 
-    // 提供 public/embed.js 或 dist/paranote.min.js
     if (url.pathname === "/public/embed.js" || url.pathname === "/embed.js") {
       const filePath = path.join(__dirname, "public", "embed.js");
       try {
@@ -435,5 +718,3 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`Novel annotator demo listening on http://localhost:${PORT}`);
 });
-
-

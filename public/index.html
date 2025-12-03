@@ -49,14 +49,17 @@
     </style>
 </head>
 <body>
-    <h1>ParaNote 网页导入器</h1>
-    <form action="/import" method="GET" class="input-group">
-        <input type="url" name="url" placeholder="输入想要评论的小说/文章 URL (例如: https://example.com/novel/1)" required>
-        <button type="submit">导入并评论</button>
+    <h1>ParaNote 阅读器</h1>
+    <form action="/read" method="GET" class="input-group">
+        <input type="url" name="url" placeholder="输入文章 URL (例如: https://example.com/article)" required>
+        <button type="submit">阅读并评论</button>
     </form>
     <div class="desc">
-        <p>输入任意网页链接，ParaNote 将尝试加载该页面并自动注入评论系统。</p>
-        <p>注意：部分网站可能因安全策略 (CSP/Frame) 无法导入。</p>
+        <p>输入任意网页链接，ParaNote 将自动提取正文生成<b>纯净阅读模式</b>，并开启段落评论。</p>
+        <p>支持 Telegra.ph、微信公众号、知乎专栏、以及大多数新闻/博客网站。</p>
+        <div style="margin-top: 20px; font-size: 12px;">
+             <a href="#" onclick="document.querySelector('form').action='/import'; this.innerText='已切换为: 原样导入模式'; return false;" style="color: #999; text-decoration: none;">切换到原样导入模式 (Beta)</a>
+        </div>
     </div>
 </body>
 </html>
