@@ -627,13 +627,19 @@
 
     // 统一的点击/触摸处理
     const handleClick = async function (e) {
-      // 如果点击的是评论数标签，不再阻止默认行为，让它触发侧边栏打开
-      // if (e.target.classList.contains("na-comment-count")) { ... }
-
       // 移除之前选中段落的下划线
       if (currentParaIndex !== null && paras[currentParaIndex]) {
         paras[currentParaIndex].style.textDecoration = "none";
         paras[currentParaIndex].style.background = "transparent";
+      }
+
+      // 如果点击的是当前已经打开的段落，则执行关闭逻辑
+      if (currentParaIndex === idx && sidebar.container.style.display !== "none") {
+          currentParaIndex = null;
+          updateCommentCounts();
+          sidebar.container.style.display = "none";
+          if (isMobile) overlay.style.display = "none";
+          return;
       }
       
       // 给当前段落加下划线（起点风格：红色下划线）

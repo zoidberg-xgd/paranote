@@ -63,40 +63,67 @@ async function fetchPageContent(targetUrl) {
     // 开启有头模式 (headless: false)，方便人工处理 Cloudflare 验证
     const browser = await puppeteer.launch({
       headless: false,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      userDataDir: path.join(__dirname, 'puppeteer_data'), // 持久化 Cookie 和缓存
+      ignoreDefaultArgs: ["--enable-automation"],
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-blink-features=AutomationControlled',
+        '--window-size=1280,800'
+      ]
     });
     
     try {
       const page = await browser.newPage();
+      
+      // 注入脚本以进一步隐藏 webdriver 特征
+      await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, 'webdriver', {
+          get: () => false,
+        });
+      });
+
       await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
       await page.setViewport({ width: 1280, height: 800 });
       
-      // 访问页面，等待网络空闲
+      // 访问页面
       await page.goto(targetUrl, { 
-        waitUntil: 'networkidle2',
-        timeout: 60000 // 增加总超时时间到 60s
+        waitUntil: 'domcontentloaded', // 放宽加载条件，避免一直卡住
+        timeout: 60000 
       });
 
-      // 智能等待：如果检测到 Cloudflare 验证页，循环等待直到通过
-      // 最多等 60 秒
+      // 智能等待循环
       const startTime = Date.now();
-      while (Date.now() - startTime < 60000) {
+      let finalContent = "";
+      
+      while (Date.now() - startTime < 120000) { // 最多给用户 2 分钟去验证
           const content = await page.content();
-          // Cloudflare 常见的验证关键词
-          if (content.includes("Just a moment") || content.includes("Verify you are human") || content.includes("Checking your browser")) {
-              // console.log("Waiting for Cloudflare challenge...");
-              await new Promise(r => setTimeout(r, 1000)); // 等待 1 秒
-          } else {
-              break; // 验证通过，跳出循环
-          }
+          
+          // 1. 尝试解析正文
+          try {
+             const dom = new JSDOM(content, { url: targetUrl });
+             const reader = new Readability(dom.window.document);
+             const article = reader.parse();
+             
+             // 如果能提取到有效标题和一定长度的内容，说明已经进入正文页
+             if (article && article.title && article.textContent && article.textContent.length > 100) {
+                 // 再次确认不包含验证关键词
+                 if (!content.includes("Verify you are human") && !content.includes("Just a moment")) {
+                     finalContent = content;
+                     break; // 成功！
+                 }
+             }
+          } catch(err) { /* ignore parsing errors */ }
+
+          // 2. 如果还在验证页，继续等待
+          await new Promise(r => setTimeout(r, 1000));
       }
       
-      // 给一点额外的缓冲时间让正文渲染
-      await new Promise(r => setTimeout(r, 2000));
+      if (!finalContent) {
+          finalContent = await page.content();
+      }
       
-      // 获取渲染后的 HTML
-      const content = await page.content();
-      return content;
+      return finalContent;
     } finally {
       await browser.close();
     }
@@ -440,9 +467,39 @@ const server = http.createServer(async (req, res) => {
     }
     .na-comment-btn { opacity: 0.3; transition: opacity 0.2s; }
     .na-comment-btn:hover { opacity: 1; }
+    .share-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 8px 16px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #555;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .share-btn:hover {
+        background: #f5f5f5;
+        color: #333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
   </style>
 </head>
 <body data-na-root data-site-id="telegraph-proxy" data-work-id="${slug}" data-chapter-id="index">
+
+  <button class="share-btn" onclick="copyLink()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+    分享
+  </button>
+
   <article>
     <h1>${page.title}</h1>
     <div style="color: #888; margin-bottom: 20px;">
@@ -452,6 +509,22 @@ const server = http.createServer(async (req, res) => {
       ${contentHtml}
     </div>
   </article>
+
+  <script>
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        const btn = document.querySelector('.share-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ 已复制';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+        }, 2000);
+      }).catch(err => {
+        alert('复制失败，请手动复制浏览器地址栏链接');
+      });
+    }
+  </script>
+
   <script 
     async
     src="/public/embed.js" 
@@ -550,22 +623,71 @@ const server = http.createServer(async (req, res) => {
         font-size: 14px;
         color: #999;
     }
+    .share-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 8px 16px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #555;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .share-btn:hover {
+        background: #f5f5f5;
+        color: #333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
   </style>
 </head>
 <body data-na-root data-site-id="paranote-reader" data-work-id="${workId}" data-chapter-id="index">
+
+  <button class="share-btn" onclick="copyLink()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+    分享
+  </button>
+
   <article>
     <h1>${article.title || '无标题'}</h1>
     <div style="color: #888; margin-bottom: 30px; font-size: 0.9em;">
       ${article.byline ? `<span>${article.byline}</span> • ` : ''}
       <span>${hostname}</span>
     </div>
+    
     <div class="content">
       ${article.content}
     </div>
+
     <div class="source-link">
         原文链接：<a href="${targetUrl}" target="_blank">${targetUrl}</a>
     </div>
   </article>
+
+  <script>
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        const btn = document.querySelector('.share-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ 已复制';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+        }, 2000);
+      }).catch(err => {
+        alert('复制失败，请手动复制浏览器地址栏链接');
+      });
+    }
+  </script>
+
+  <!-- ParaNote Embed Script -->
   <script 
     async
     src="/public/embed.js" 
@@ -595,31 +717,45 @@ const server = http.createServer(async (req, res) => {
       }
 
       try {
-          const targetOrigin = new URL(targetUrl).origin;
-          const resp = await fetch(targetUrl, {
-              headers: {
-                  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                  'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-                  'Referer': targetOrigin + '/',
-                  'Upgrade-Insecure-Requests': '1',
-                  'Cache-Control': 'max-age=0'
-              }
-          });
-          if (!resp.ok) throw new Error(`Failed to fetch: ${resp.status} ${resp.statusText}`);
+          // 使用智能抓取（复用 Puppeteer 能力）
+          let html = await fetchPageContent(targetUrl);
           
-          let html = await resp.text();
+          // 1. 注入 Base Tag 解决相对路径资源问题 (如果原页面没写)
           if (!html.includes("<base")) {
               html = html.replace("<head>", `<head><base href="${targetUrl}">`);
           }
 
+          // 强力净化：移除所有 script 标签，防止原网站 JS (如知乎的 SPA 路由) 在本地运行时报错或跳转 404
+          // 这是一个权衡：虽然没了交互，但至少能看到内容。
+          html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gim, "<!-- script removed by paranote -->");
+          
+          // 尝试修复懒加载图片：把 data-src, data-original 替换为 src
+          html = html.replace(/\sdata-(src|original)="([^"]*)"/gi, ' src="$2"');
+
           const workId = crypto.createHash('md5').update(new URL(targetUrl).hostname).digest('hex');
           const chapterId = crypto.createHash('md5').update(targetUrl).digest('hex');
 
-          html = html.replace("<body", `<body data-na-root data-site-id="imported" data-work-id="${workId}" data-chapter-id="${chapterId}"`);
+          // 3. 给 body 注入标记
+          // 注意：有些网页 body 标签可能有属性，这里简单替换可能不够鲁棒，但对于大多数情况可行
+          // 更稳健的做法是用正则替换
+          html = html.replace(/<body([^>]*)>/i, `<body$1 data-na-root data-site-id="imported" data-work-id="${workId}" data-chapter-id="${chapterId}">`);
 
+          // 4. 注入 embed.js 和分享按钮
           const script = `
+          <button class="share-btn" onclick="copyLink()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+            分享
+          </button>
           <script>
+            function copyLink() {
+              navigator.clipboard.writeText(window.location.href).then(() => {
+                const btn = document.querySelector('.share-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ 已复制';
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+              }).catch(err => { alert('复制失败'); });
+            }
+             // 简单的防跨域资源报错抑制
              window.addEventListener('error', function(e) {
                  if(e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT') {}
              }, true);
@@ -632,7 +768,58 @@ const server = http.createServer(async (req, res) => {
           ></script>
           <style>
             .na-sidebar, .na-overlay { z-index: 2147483647 !important; }
-            p { margin-bottom: 1em; }
+            /* p { margin-bottom: 1em; } // 原样模式下不要强制修改 margin，以免破坏布局 */
+            
+            .share-btn {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 8px 16px;
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 20px;
+                cursor: pointer;
+                font-size: 14px;
+                color: #555;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                transition: all 0.2s;
+                z-index: 2147483648; /* 比侧边栏还高一点 */
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .share-btn:hover {
+                background: #f5f5f5;
+                color: #333;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+            
+            /* [知乎/通用] 强制展开折叠内容 */
+            .RichContent-inner, .RichContent-inner--collapsed, .RichContent { 
+                max-height: none !important; 
+                height: auto !important;
+                overflow: visible !important; 
+                -webkit-mask-image: none !important; 
+                mask-image: none !important;
+            }
+            /* 移除渐变遮罩 */
+            .RichContent-inner::after, .RichContent-inner--collapsed::after {
+                display: none !important;
+                content: none !important;
+            }
+            
+            /* 针对问答页面的特定容器 */
+            .QuestionAnswer-content {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            /* 隐藏展开按钮和无关元素 */
+            .ContentItem-expandButton, .ContentItem-actions, .ViewAll { display: none !important; }
+            
+            /* 隐藏底部的登录提示栏 (知乎) */
+            .SignFlowHomepage-footer, .Card.AppBanner { display: none !important; }
           </style>
           `;
           

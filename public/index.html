@@ -58,8 +58,29 @@
         <p>输入任意网页链接，ParaNote 将自动提取正文生成<b>纯净阅读模式</b>，并开启段落评论。</p>
         <p>支持 Telegra.ph、微信公众号、知乎专栏、以及大多数新闻/博客网站。</p>
         <div style="margin-top: 20px; font-size: 12px;">
-             <a href="#" onclick="document.querySelector('form').action='/import'; this.innerText='已切换为: 原样导入模式'; return false;" style="color: #999; text-decoration: none;">切换到原样导入模式 (Beta)</a>
+             <a href="#" id="mode-switch" style="color: #999; text-decoration: none; border-bottom: 1px dashed #ccc;">当前模式：纯净阅读 (点击切换)</a>
         </div>
     </div>
+    
+    <script>
+        const form = document.querySelector('form');
+        const switchBtn = document.getElementById('mode-switch');
+        let isImportMode = false;
+
+        switchBtn.onclick = function(e) {
+            e.preventDefault();
+            isImportMode = !isImportMode;
+            
+            if (isImportMode) {
+                form.action = '/import';
+                switchBtn.innerText = '当前模式：原样导入 (点击切换回纯净阅读)';
+                switchBtn.style.color = '#f56c6c';
+            } else {
+                form.action = '/read';
+                switchBtn.innerText = '当前模式：纯净阅读 (点击切换)';
+                switchBtn.style.color = '#999';
+            }
+        };
+    </script>
 </body>
 </html>
