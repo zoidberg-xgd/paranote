@@ -1,0 +1,6 @@
+node_modules
+npm-debug.log
+puppeteer_data
+data
+.git
+.DS_Store

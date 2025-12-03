@@ -60,10 +60,14 @@ async function fetchPageContent(targetUrl) {
     console.log(`Fetch failed (${e.message}), fallback to Puppeteer...`);
     
     // 2. 降级使用 Puppeteer
-    // 开启有头模式 (headless: false)，方便人工处理 Cloudflare 验证
+    // 根据环境变量决定是否开启有头模式
+    // 生产环境 (Docker) 通常没有显示器，强制使用 headless: "new"
+    // 本地开发默认 headless: false 以便人工介入
+    const isHeadless = process.env.PUPPETEER_HEADLESS !== 'false';
+    
     const browser = await puppeteer.launch({
-      headless: false,
-      userDataDir: path.join(__dirname, 'puppeteer_data'), // 持久化 Cookie 和缓存
+      headless: isHeadless ? "new" : false,
+      userDataDir: path.join(__dirname, 'puppeteer_data'),
       ignoreDefaultArgs: ["--enable-automation"],
       args: [
         '--no-sandbox', 
@@ -903,6 +907,11 @@ const server = http.createServer(async (req, res) => {
   res.end("Not found");
 });
 
-server.listen(PORT, () => {
-  console.log(`Novel annotator demo listening on http://localhost:${PORT}`);
-});
+// 只有当直接运行此文件时才启动监听
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  server.listen(PORT, () => {
+    console.log(`Novel annotator demo listening on http://localhost:${PORT}`);
+  });
+}
+
+export { server };
