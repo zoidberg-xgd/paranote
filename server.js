@@ -266,7 +266,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 400, { error: "empty_body" });
     }
 
-    const { siteId, workId, chapterId, paraIndex, content, userName } = body;
+    const { siteId, workId, chapterId, paraIndex, content, userName, contextText } = body;
 
     if (
       !siteId ||
@@ -301,6 +301,7 @@ const server = http.createServer(async (req, res) => {
         userName: finalUserName,
         userId,
         userAvatar,
+        contextText, // 传递上下文
       });
       return sendJson(res, 201, comment);
     } catch (e) {

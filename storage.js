@@ -57,6 +57,9 @@ export async function createComment({
   paraIndex,
   content,
   userName,
+  userId,
+  userAvatar,
+  contextText, // 新增：段落指纹
 }) {
   const all = await readAll(siteId, workId, chapterId);
   const now = new Date().toISOString();
@@ -68,7 +71,10 @@ export async function createComment({
     chapterId,
     paraIndex,
     userName: userName || "匿名",
+    userId,
+    userAvatar,
     content,
+    contextText, // 存储上下文
     likes: 0,
     createdAt: now,
   };

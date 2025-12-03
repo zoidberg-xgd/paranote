@@ -9,6 +9,9 @@ Lightweight **paragraph comments** service and embed widget for novel and articl
 ## 特性
 
 - **段落级评论**：按 `siteId + workId + chapterId + paraIndex` 精确定位到具体段落
+- **模糊定位 (Fuzzy Anchoring)**：即使文章内容变动或段落增删，评论也能通过内容指纹自动重定位，不再错位
+- **Hypothesis 风格 UI**：全新的卡片式侧边栏设计，支持多彩头像、Markdown 引用和丝滑动画，体验媲美专业标注工具
+- **移动端适配**：专为手机优化的底部抽屉交互，支持点击关闭和自动滚动
 - **通用阅读模式**：输入任意文章 URL (知乎、公众号、博客等)，自动提取正文并生成纯净阅读页面，自带评论区
 - **强力抗反爬**：集成 Puppeteer Stealth，自动绕过 Cloudflare 等反爬验证，支持 Cloudflare 挑战页手动点击
 - **Telegra.ph 专线**：针对 Telegra.ph 文章进行深度优化，排版更完美

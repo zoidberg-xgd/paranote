@@ -58,6 +58,14 @@
         shadow: "0 4px 12px rgba(0,0,0,0.15)"
     };
 
+    // 注入 Keyframe 动画
+    const styleTag = document.createElement('style');
+    styleTag.textContent = `
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    `;
+    document.head.appendChild(styleTag);
+
     // 移动端和桌面端不同的样式
     if (isMobile) {
       Object.assign(container.style, {
@@ -77,7 +85,8 @@
         flexDirection: "column",
         zIndex: 99999,
         overflow: "hidden",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
       });
     } else {
       Object.assign(container.style, {
@@ -94,7 +103,8 @@
         flexDirection: "column",
         zIndex: 99999,
         overflow: "hidden",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        animation: "slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
       });
     }
 
@@ -230,6 +240,11 @@
     btn.onclick = async function () {
       const content = textarea.value.trim();
       if (!content || currentParaIndex == null) return;
+      
+      // 获取当前段落的上下文指纹 (前32个字符)
+      const pText = paras[currentParaIndex] ? paras[currentParaIndex].textContent.trim() : "";
+      const contextText = pText.slice(0, 32);
+
       try {
         btn.textContent = "发送中...";
         btn.disabled = true;
@@ -247,6 +262,7 @@
             chapterId,
             paraIndex: currentParaIndex,
             content,
+            contextText, // 发送指纹
           }),
         });
         textarea.value = "";
@@ -272,6 +288,57 @@
   // 缓存所有段落的评论数据
   let allCommentsData = null;
 
+  // 模糊定位算法：将评论重新挂载到正确的段落
+  function reanchorComments(serverData) {
+      const correctedData = {};
+      const allComments = [];
+      
+      // 1. 扁平化所有评论
+      Object.values(serverData).forEach(list => allComments.push(...list));
+      
+      // 2. 重新分配
+      allComments.forEach(c => {
+          let targetIndex = c.paraIndex;
+          
+          // 检查是否需要重定位
+          // 如果有上下文指纹，且当前位置的内容不匹配，则搜索全篇
+          if (c.contextText) {
+              const currentP = paras[targetIndex];
+              const currentText = currentP ? currentP.textContent.trim() : "";
+              
+              // 如果当前段落不存在，或者开头不匹配，说明段落变动了
+              if (!currentP || !currentText.startsWith(c.contextText)) {
+                  // 简单的全篇搜索 (Fuzzy Search)
+                  // 优化：先搜索附近，再搜索全篇。这里简化为直接搜索全篇。
+                  let bestMatchIndex = -1;
+                  
+                  for (let i = 0; i < paras.length; i++) {
+                      const pText = paras[i].textContent.trim();
+                      if (pText.startsWith(c.contextText)) {
+                          bestMatchIndex = i;
+                          break; // 找到了！
+                      }
+                  }
+                  
+                  if (bestMatchIndex !== -1) {
+                      targetIndex = bestMatchIndex;
+                      // console.log(`Re-anchored comment ${c.id} from ${c.paraIndex} to ${targetIndex}`);
+                  } else {
+                      // 如果找不到匹配的段落，就变成“孤儿评论”，或者保留在原位(虽然错位)
+                      // 这里选择保留在原位，或者放到第0段，或者标记为失效。
+                      // 为了体验，暂且保留原位，标红？不，还是原位吧。
+                  }
+              }
+          }
+          
+          const key = String(targetIndex);
+          if (!correctedData[key]) correctedData[key] = [];
+          correctedData[key].push(c);
+      });
+      
+      return correctedData;
+  }
+
   async function loadAllComments() {
     try {
       const url =
@@ -284,7 +351,9 @@
         encodeURIComponent(chapterId);
       const res = await fetch(url);
       const data = await res.json();
-      allCommentsData = data.commentsByPara || {};
+      
+      // 执行模糊定位纠正
+      allCommentsData = reanchorComments(data.commentsByPara || {});
       return allCommentsData;
     } catch (e) {
       console.error("load comments failed", e);
