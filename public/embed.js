@@ -67,6 +67,7 @@
       overlay.onclick = function () {
         sidebar.container.style.display = "none";
         overlay.style.display = "none";
+        if (isMobile) document.body.style.overflow = "";
         
         if (currentParaIndex !== null && paras[currentParaIndex]) {
             paras[currentParaIndex].style.textDecoration = "none";
@@ -205,6 +206,7 @@
         closeBtn.onclick = function () {
           container.style.display = "none";
           overlay.style.display = "none";
+          if (isMobile) document.body.style.overflow = "";
           
           if (currentParaIndex !== null && paras[currentParaIndex]) {
               paras[currentParaIndex].style.textDecoration = "none";
@@ -752,7 +754,10 @@
               currentParaIndex = null;
               updateCommentCounts();
               sidebar.container.style.display = "none";
-              if (isMobile) overlay.style.display = "none";
+              if (isMobile) {
+                  overlay.style.display = "none";
+                  document.body.style.overflow = "";
+              }
               return;
           }
           
@@ -771,6 +776,7 @@
           sidebar.container.style.display = "flex";
           if (isMobile) {
             overlay.style.display = "block";
+            document.body.style.overflow = "hidden";
             // 移动端滚动到顶部
             sidebar.container.scrollTop = 0;
           }
