@@ -67,6 +67,13 @@
       overlay.onclick = function () {
         sidebar.container.style.display = "none";
         overlay.style.display = "none";
+        
+        if (currentParaIndex !== null && paras[currentParaIndex]) {
+            paras[currentParaIndex].style.textDecoration = "none";
+            paras[currentParaIndex].style.background = "transparent";
+            currentParaIndex = null;
+            updateCommentCounts();
+        }
       };
       document.body.appendChild(overlay);
 
@@ -198,6 +205,13 @@
         closeBtn.onclick = function () {
           container.style.display = "none";
           overlay.style.display = "none";
+          
+          if (currentParaIndex !== null && paras[currentParaIndex]) {
+              paras[currentParaIndex].style.textDecoration = "none";
+              paras[currentParaIndex].style.background = "transparent";
+              currentParaIndex = null;
+              updateCommentCounts();
+          }
         };
         header.appendChild(closeBtn);
 
