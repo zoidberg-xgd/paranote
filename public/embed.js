@@ -581,7 +581,8 @@
             delBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#aaa; font-size:14px; margin-right: 12px; transition:color 0.2s;";
             delBtn.onmouseenter = () => delBtn.style.color = "#bd1c2b";
             delBtn.onmouseleave = () => delBtn.style.color = "#aaa";
-            delBtn.onclick = async function() {
+            delBtn.onclick = async function(e) {
+              e.stopPropagation();
               if(!confirm("确定删除这条评论吗？")) return;
               try {
                  const headers = { "Content-Type": "application/json" };
@@ -622,7 +623,8 @@
           likeBtn.onmouseenter = () => { likeBtn.style.color = "#bd1c2b"; likeBtn.style.background = "#fff0f0"; };
           likeBtn.onmouseleave = () => { likeBtn.style.color = "#aaa"; likeBtn.style.background = "transparent"; };
 
-          likeBtn.onclick = async function() {
+          likeBtn.onclick = async function(e) {
+              e.stopPropagation();
               try {
                  const headers = { "Content-Type": "application/json" };
                  if (token) headers["X-Paranote-Token"] = token;
@@ -743,6 +745,9 @@
 
         // 统一的点击/触摸处理
         const handleClick = async function (e) {
+          // 如果点击的是链接或交互元素，优先处理原有行为，不触发评论
+          if (e.target.closest("a, button, input, textarea, select, [role='button']")) return;
+
           // 移除之前选中段落的下划线
           if (currentParaIndex !== null && paras[currentParaIndex]) {
             paras[currentParaIndex].style.textDecoration = "none";
