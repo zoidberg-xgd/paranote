@@ -5,3 +5,4 @@ npm-debug.log*
 puppeteer_data
 h/
 coverage/
+puppeteer_data*
