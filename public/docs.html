@@ -110,10 +110,16 @@
             <tr><td><code>paraIndex</code></td><td>是</td><td>段落索引 (从 0 开始)</td></tr>
             <tr><td><code>content</code></td><td>是</td><td>评论内容 (1-1000 字符)</td></tr>
             <tr><td><code>contextText</code></td><td>否</td><td>段落上下文 (用于模糊定位)</td></tr>
+            <tr><td><code>parentId</code></td><td>否</td><td>父评论 ID (用于回复)</td></tr>
         </table>
         
+        <div class="note">
+            <strong>匿名用户：</strong>未提供 JWT 时，系统会根据 IP 自动生成稳定的访客身份 (如 <code>访客-a1b2c3</code>)。
+        </div>
+        
         <h4>请求示例</h4>
-        <pre><code>curl -X POST http://localhost:4000/api/v1/comments \
+        <pre><code># 发布评论
+curl -X POST http://localhost:4000/api/v1/comments \
   -H "Content-Type: application/json" \
   -d '{
     "siteId": "my-site",
@@ -121,6 +127,18 @@
     "chapterId": "ch-1",
     "paraIndex": 0,
     "content": "这段写得真好！"
+  }'
+
+# 回复评论
+curl -X POST http://localhost:4000/api/v1/comments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "siteId": "my-site",
+    "workId": "article-1",
+    "chapterId": "ch-1",
+    "paraIndex": 0,
+    "content": "同意！",
+    "parentId": "abc123"
   }'</code></pre>
 
         <hr>

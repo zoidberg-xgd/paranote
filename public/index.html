@@ -69,7 +69,10 @@
             const mode = document.querySelector('input[name="mode"]:checked').value;
             location.href = `/public/reader.html?url=${encodeURIComponent(url)}&mode=${mode}`;
         }
-        document.getElementById('url').onkeydown = e => e.key === 'Enter' && go();
+        document.getElementById('url').addEventListener('keydown', e => {
+            // 只处理 Enter 键，不阻止其他键（如 Ctrl+V）
+            if (e.key === 'Enter') go();
+        });
     </script>
 </body>
 </html>

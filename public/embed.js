@@ -300,7 +300,9 @@
           resize: "vertical",
           outline: "none",
           transition: "border-color 0.2s, box-shadow 0.2s",
-          marginBottom: "10px"
+          marginBottom: "10px",
+          userSelect: "text",
+          WebkitUserSelect: "text"
         });
         textarea.onfocus = () => {
             textarea.style.borderColor = styles.primary;
@@ -590,7 +592,35 @@
           content.style.cssText = "color: #444; font-size: 14px; line-height: 1.6; word-break: break-word; padding-left: 42px;";
           
           // 处理引用内容 (简单markdown blockquote)
-          let contentText = c.content;
+          let contentText = c.content || '';
+          const MAX_LENGTH = 150; // 超过150字符折叠
+          
+          // 创建可折叠的内容显示
+          function createCollapsibleContent(text, container) {
+              if (text.length > MAX_LENGTH) {
+                  const shortText = text.slice(0, MAX_LENGTH) + '...';
+                  const textNode = document.createElement('span');
+                  textNode.textContent = shortText;
+                  
+                  const expandBtn = document.createElement('span');
+                  expandBtn.textContent = ' 展开';
+                  expandBtn.style.cssText = 'color:#bd1c2b;cursor:pointer;font-size:12px;margin-left:4px;';
+                  
+                  let expanded = false;
+                  expandBtn.onclick = (e) => {
+                      e.stopPropagation();
+                      expanded = !expanded;
+                      textNode.textContent = expanded ? text : shortText;
+                      expandBtn.textContent = expanded ? ' 收起' : ' 展开';
+                  };
+                  
+                  container.appendChild(textNode);
+                  container.appendChild(expandBtn);
+              } else {
+                  container.textContent = text;
+              }
+          }
+          
           if (contentText.startsWith("> ")) {
               const parts = contentText.split("\n");
               const quoteText = parts[0].substring(2);
@@ -602,10 +632,10 @@
               content.appendChild(blockquote);
               
               const p = document.createElement("div");
-              p.textContent = mainText;
+              createCollapsibleContent(mainText, p);
               content.appendChild(p);
           } else {
-              content.textContent = contentText;
+              createCollapsibleContent(contentText, content);
           }
           
           // 操作栏（回复 + 点赞 + 删除）
@@ -687,15 +717,51 @@
           item.appendChild(content);
           item.appendChild(actionContainer);
           
-          // 显示回复（如果有）
+          // 显示回复（如果有，超过2条折叠）
           if (c.replies && c.replies.length > 0) {
             const repliesContainer = document.createElement("div");
             repliesContainer.style.cssText = "margin-top: 12px; padding-left: 42px; border-left: 2px solid #eee;";
             
-            c.replies.forEach(reply => {
-              const replyItem = createReplyItem(reply, paraIndex, listEl, headerCountEl, isAdmin, isAuthor, token, editToken);
-              repliesContainer.appendChild(replyItem);
-            });
+            const MAX_VISIBLE_REPLIES = 2;
+            const replies = c.replies;
+            
+            if (replies.length > MAX_VISIBLE_REPLIES) {
+              // 先显示前2条
+              replies.slice(0, MAX_VISIBLE_REPLIES).forEach(reply => {
+                const replyItem = createReplyItem(reply, paraIndex, listEl, headerCountEl, isAdmin, isAuthor, token, editToken);
+                repliesContainer.appendChild(replyItem);
+              });
+              
+              // 隐藏的回复容器
+              const hiddenReplies = document.createElement("div");
+              hiddenReplies.style.display = "none";
+              replies.slice(MAX_VISIBLE_REPLIES).forEach(reply => {
+                const replyItem = createReplyItem(reply, paraIndex, listEl, headerCountEl, isAdmin, isAuthor, token, editToken);
+                hiddenReplies.appendChild(replyItem);
+              });
+              repliesContainer.appendChild(hiddenReplies);
+              
+              // 展开/收起按钮
+              const toggleBtn = document.createElement("div");
+              toggleBtn.style.cssText = "color:#bd1c2b;font-size:12px;cursor:pointer;padding:8px 0;";
+              toggleBtn.textContent = `展开 ${replies.length - MAX_VISIBLE_REPLIES} 条回复 ▼`;
+              toggleBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (hiddenReplies.style.display === "none") {
+                  hiddenReplies.style.display = "block";
+                  toggleBtn.textContent = "收起回复 ▲";
+                } else {
+                  hiddenReplies.style.display = "none";
+                  toggleBtn.textContent = `展开 ${replies.length - MAX_VISIBLE_REPLIES} 条回复 ▼`;
+                }
+              };
+              repliesContainer.appendChild(toggleBtn);
+            } else {
+              replies.forEach(reply => {
+                const replyItem = createReplyItem(reply, paraIndex, listEl, headerCountEl, isAdmin, isAuthor, token, editToken);
+                repliesContainer.appendChild(replyItem);
+              });
+            }
             
             item.appendChild(repliesContainer);
           }
@@ -765,7 +831,7 @@
         
         const textarea = document.createElement("textarea");
         textarea.placeholder = `回复 ${parentComment.userName || '匿名'}...`;
-        textarea.style.cssText = "width: 100%; height: 60px; border: 1px solid #ddd; border-radius: 4px; padding: 8px; font-size: 13px; resize: none; box-sizing: border-box;";
+        textarea.style.cssText = "width: 100%; height: 60px; border: 1px solid #ddd; border-radius: 4px; padding: 8px; font-size: 13px; resize: none; box-sizing: border-box; user-select: text; -webkit-user-select: text;";
         
         const btnRow = document.createElement("div");
         btnRow.style.cssText = "display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;";

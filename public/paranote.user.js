@@ -221,22 +221,42 @@
     // ==================== 内置评论功能 ====================
     
     function initParaNoteEmbed(apiBase, siteId) {
-        const root = document.querySelector('[data-na-root]');
-        if (!root) {
+        const roots = document.querySelectorAll('[data-na-root]');
+        if (!roots.length) {
             console.error('[ParaNote] No root element found');
             return;
         }
         
-        const workId = root.dataset.workId || 'default-work';
-        const chapterId = root.dataset.chapterId || 'default-chapter';
-        const paras = root.querySelectorAll('p');
+        console.log(`[ParaNote] Found ${roots.length} containers`);
         
-        console.log(`[ParaNote] Initializing with ${paras.length} paragraphs`);
+        // 全局状态
+        let currentContext = null; // { workId, chapterId, paraIndex }
+        let allContainerData = {}; // { chapterId: { allCommentsData } }
         
-        if (!paras.length) return;
+        // 创建全局侧边栏
+        const sidebar = document.createElement('div');
+        sidebar.className = 'na-sidebar';
+        sidebar.style.cssText = 'position:fixed;top:0;right:-350px;width:350px;height:100vh;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,0.1);z-index:99999;transition:right 0.3s;display:flex;flex-direction:column;';
+        sidebar.innerHTML = `
+            <div style="padding:15px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-weight:600;">评论 <span id="na-count"></span></span>
+                <button id="na-close" style="border:none;background:none;font-size:20px;cursor:pointer;">×</button>
+            </div>
+            <div id="na-list" style="flex:1;overflow-y:auto;padding:10px;"></div>
+            <div style="padding:10px;border-top:1px solid #eee;">
+                <textarea id="na-input" placeholder="写下你的评论..." style="width:100%;height:60px;border:1px solid #ddd;border-radius:4px;padding:8px;resize:none;box-sizing:border-box;user-select:text;-webkit-user-select:text;"></textarea>
+                <button id="na-submit" style="margin-top:8px;width:100%;padding:8px;background:#bd1c2b;color:#fff;border:none;border-radius:4px;cursor:pointer;">发布</button>
+            </div>
+        `;
+        document.body.appendChild(sidebar);
         
-        let currentParaIndex = null;
-        let allCommentsData = {};
+        const listEl = sidebar.querySelector('#na-list');
+        const countEl = sidebar.querySelector('#na-count');
+        const inputEl = sidebar.querySelector('#na-input');
+        const submitBtn = sidebar.querySelector('#na-submit');
+        const closeBtn = sidebar.querySelector('#na-close');
+        
+        closeBtn.onclick = () => { sidebar.style.right = '-350px'; currentContext = null; };
         
         // API 请求函数
         function apiRequest(url, options = {}) {
@@ -258,23 +278,25 @@
             });
         }
         
-        // 加载评论
-        async function loadComments() {
+        // 加载指定容器的评论
+        async function loadContainerComments(workId, chapterId) {
             const url = `${apiBase}/api/v1/comments?siteId=${encodeURIComponent(siteId)}&workId=${encodeURIComponent(workId)}&chapterId=${encodeURIComponent(chapterId)}`;
             const data = await apiRequest(url);
-            allCommentsData = data.commentsByPara || {};
-            updateBadges();
+            allContainerData[chapterId] = data.commentsByPara || {};
+            return allContainerData[chapterId];
         }
         
-        // 更新评论数徽章
-        function updateBadges() {
+        // 更新指定容器的徽章
+        function updateContainerBadges(root, chapterId) {
+            const paras = root.querySelectorAll('p');
+            const commentsData = allContainerData[chapterId] || {};
             paras.forEach((p, idx) => {
-                const count = (allCommentsData[String(idx)] || []).length;
+                const count = (commentsData[String(idx)] || []).length;
                 let badge = p.querySelector('.na-badge');
                 if (!badge) {
                     badge = document.createElement('span');
                     badge.className = 'na-badge';
-                    badge.style.cssText = 'display:inline-block;margin-left:6px;padding:0 4px;font-size:10px;color:#999;background:#f5f5f5;border-radius:2px;cursor:pointer;';
+                    badge.style.cssText = 'display:inline-block;margin-left:6px;padding:2px 6px;font-size:11px;color:#fff;background:#bd1c2b;border-radius:10px;cursor:pointer;font-weight:500;';
                     p.appendChild(badge);
                 }
                 badge.textContent = count > 0 ? count : '';
@@ -282,29 +304,87 @@
             });
         }
         
-        // 创建侧边栏
-        const sidebar = document.createElement('div');
-        sidebar.style.cssText = 'position:fixed;top:0;right:-350px;width:350px;height:100vh;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,0.1);z-index:99999;transition:right 0.3s;display:flex;flex-direction:column;';
-        sidebar.innerHTML = `
-            <div style="padding:15px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-weight:600;">评论 <span id="na-count"></span></span>
-                <button id="na-close" style="border:none;background:none;font-size:20px;cursor:pointer;">×</button>
-            </div>
-            <div id="na-list" style="flex:1;overflow-y:auto;padding:10px;"></div>
-            <div style="padding:10px;border-top:1px solid #eee;">
-                <textarea id="na-input" placeholder="写下你的评论..." style="width:100%;height:60px;border:1px solid #ddd;border-radius:4px;padding:8px;resize:none;box-sizing:border-box;"></textarea>
-                <button id="na-submit" style="margin-top:8px;width:100%;padding:8px;background:#bd1c2b;color:#fff;border:none;border-radius:4px;cursor:pointer;">发布</button>
-            </div>
-        `;
-        document.body.appendChild(sidebar);
+        // 显示评论
+        function showComments(workId, chapterId, paraIndex) {
+            currentContext = { workId, chapterId, paraIndex };
+            sidebar.style.right = '0';
+            
+            const commentsData = allContainerData[chapterId] || {};
+            const comments = commentsData[String(paraIndex)] || [];
+            countEl.textContent = comments.length > 0 ? `(${comments.length})` : '';
+            
+            listEl.innerHTML = '';
+            
+            if (comments.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center;color:#999;padding:40px;">💬<br>暂无评论</div>';
+                return;
+            }
+            
+            comments.forEach(c => {
+                listEl.appendChild(createCommentCard(c, workId, chapterId));
+            });
+        }
         
-        const listEl = sidebar.querySelector('#na-list');
-        const countEl = sidebar.querySelector('#na-count');
-        const inputEl = sidebar.querySelector('#na-input');
-        const submitBtn = sidebar.querySelector('#na-submit');
-        const closeBtn = sidebar.querySelector('#na-close');
+        // 初始化每个容器
+        roots.forEach(async (root, rootIndex) => {
+            const workId = root.dataset.workId || 'default-work';
+            const chapterId = root.dataset.chapterId || 'default-chapter';
+            const paras = root.querySelectorAll('p');
+            
+            if (!paras.length) return;
+            
+            console.log(`[ParaNote] Container ${rootIndex}: ${paras.length} paragraphs, chapterId: ${chapterId}`);
+            
+            // 加载评论并更新徽章
+            await loadContainerComments(workId, chapterId);
+            updateContainerBadges(root, chapterId);
+            
+            // 段落点击事件
+            paras.forEach((p, idx) => {
+                p.style.cursor = 'pointer';
+                p.onclick = (e) => {
+                    if (e.target.tagName === 'A') return;
+                    showComments(workId, chapterId, idx);
+                };
+            });
+        });
         
-        closeBtn.onclick = () => { sidebar.style.right = '-350px'; currentParaIndex = null; };
+        // 发布评论
+        submitBtn.onclick = async () => {
+            if (!currentContext) return;
+            const content = inputEl.value.trim();
+            if (!content) return;
+            
+            const { workId, chapterId, paraIndex } = currentContext;
+            
+            submitBtn.textContent = '发送中...';
+            submitBtn.disabled = true;
+            
+            try {
+                await apiRequest(apiBase + '/api/v1/comments', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        siteId, workId, chapterId,
+                        paraIndex,
+                        content
+                    })
+                });
+                inputEl.value = '';
+                await loadContainerComments(workId, chapterId);
+                const root = document.querySelector(`[data-chapter-id="${chapterId}"]`);
+                if (root) updateContainerBadges(root, chapterId);
+                showComments(workId, chapterId, paraIndex);
+                showToast('✅ 发布成功');
+            } catch (e) {
+                console.error(e);
+                showToast('❌ 发布失败');
+            } finally {
+                submitBtn.textContent = '发布';
+                submitBtn.disabled = false;
+            }
+        };
+        
+        console.log('[ParaNote] Embed initialized');
         
         // 生成头像颜色
         function getAvatarColor(name) {
@@ -315,7 +395,7 @@
         }
         
         // 创建评论卡片
-        function createCommentCard(c, isReply = false) {
+        function createCommentCard(c, workId, chapterId, isReply = false) {
             const card = document.createElement('div');
             card.style.cssText = isReply 
                 ? 'padding:8px 0;border-bottom:1px solid #f0f0f0;'
@@ -337,13 +417,46 @@
                 </div>
             `;
             
-            // 内容
-            const content = document.createElement('div');
-            content.style.cssText = `font-size:${isReply?'13px':'14px'};color:#333;line-height:1.5;padding-left:${isReply?'32px':'40px'};`;
-            content.textContent = c.content;
+            // 内容（长评论折叠）
+            const contentEl = document.createElement('div');
+            contentEl.style.cssText = `font-size:${isReply?'13px':'14px'};color:#333;line-height:1.5;padding-left:${isReply?'32px':'40px'};`;
+            
+            const MAX_LENGTH = 150; // 超过150字符折叠
+            const content = c.content || '';
+            
+            if (content.length > MAX_LENGTH) {
+                const shortText = content.slice(0, MAX_LENGTH) + '...';
+                contentEl.textContent = shortText;
+                contentEl.dataset.full = content;
+                contentEl.dataset.short = shortText;
+                contentEl.dataset.expanded = 'false';
+                
+                const expandBtn = document.createElement('span');
+                expandBtn.textContent = ' 展开';
+                expandBtn.style.cssText = 'color:#bd1c2b;cursor:pointer;font-size:12px;margin-left:4px;';
+                expandBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const isExpanded = contentEl.dataset.expanded === 'true';
+                    if (isExpanded) {
+                        contentEl.childNodes[0].textContent = contentEl.dataset.short;
+                        expandBtn.textContent = ' 展开';
+                        contentEl.dataset.expanded = 'false';
+                    } else {
+                        contentEl.childNodes[0].textContent = contentEl.dataset.full;
+                        expandBtn.textContent = ' 收起';
+                        contentEl.dataset.expanded = 'true';
+                    }
+                };
+                contentEl.appendChild(document.createTextNode(shortText));
+                contentEl.innerHTML = ''; // 清空
+                contentEl.appendChild(document.createTextNode(shortText));
+                contentEl.appendChild(expandBtn);
+            } else {
+                contentEl.textContent = content;
+            }
             
             card.appendChild(header);
-            card.appendChild(content);
+            card.appendChild(contentEl);
             
             // 操作栏（非回复才显示）
             if (!isReply) {
@@ -356,7 +469,7 @@
                 replyBtn.style.cssText = 'border:none;background:none;color:#666;font-size:12px;cursor:pointer;padding:2px 6px;';
                 replyBtn.onmouseenter = () => replyBtn.style.color = '#bd1c2b';
                 replyBtn.onmouseleave = () => replyBtn.style.color = '#666';
-                replyBtn.onclick = () => showReplyInput(card, c);
+                replyBtn.onclick = () => showReplyInput(card, c, workId, chapterId);
                 
                 // 点赞按钮
                 const likeBtn = document.createElement('button');
@@ -387,13 +500,49 @@
                 card.appendChild(actions);
             }
             
-            // 显示回复
+            // 显示回复（超过3条折叠）
             if (c.replies && c.replies.length > 0) {
                 const repliesContainer = document.createElement('div');
                 repliesContainer.style.cssText = 'margin-top:10px;padding-left:40px;border-left:2px solid #eee;margin-left:16px;';
-                c.replies.forEach(r => {
-                    repliesContainer.appendChild(createCommentCard(r, true));
-                });
+                
+                const MAX_VISIBLE_REPLIES = 2; // 默认显示2条回复
+                const replies = c.replies;
+                
+                if (replies.length > MAX_VISIBLE_REPLIES) {
+                    // 先显示前2条
+                    replies.slice(0, MAX_VISIBLE_REPLIES).forEach(r => {
+                        repliesContainer.appendChild(createCommentCard(r, workId, chapterId, true));
+                    });
+                    
+                    // 隐藏的回复容器
+                    const hiddenReplies = document.createElement('div');
+                    hiddenReplies.style.display = 'none';
+                    replies.slice(MAX_VISIBLE_REPLIES).forEach(r => {
+                        hiddenReplies.appendChild(createCommentCard(r, workId, chapterId, true));
+                    });
+                    repliesContainer.appendChild(hiddenReplies);
+                    
+                    // 展开/收起按钮
+                    const toggleBtn = document.createElement('div');
+                    toggleBtn.style.cssText = 'color:#bd1c2b;font-size:12px;cursor:pointer;padding:8px 0;';
+                    toggleBtn.textContent = `展开 ${replies.length - MAX_VISIBLE_REPLIES} 条回复 ▼`;
+                    toggleBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if (hiddenReplies.style.display === 'none') {
+                            hiddenReplies.style.display = 'block';
+                            toggleBtn.textContent = '收起回复 ▲';
+                        } else {
+                            hiddenReplies.style.display = 'none';
+                            toggleBtn.textContent = `展开 ${replies.length - MAX_VISIBLE_REPLIES} 条回复 ▼`;
+                        }
+                    };
+                    repliesContainer.appendChild(toggleBtn);
+                } else {
+                    replies.forEach(r => {
+                        repliesContainer.appendChild(createCommentCard(r, workId, chapterId, true));
+                    });
+                }
+                
                 card.appendChild(repliesContainer);
             }
             
@@ -401,7 +550,7 @@
         }
         
         // 显示回复输入框
-        function showReplyInput(parentCard, parentComment) {
+        function showReplyInput(parentCard, parentComment, workId, chapterId) {
             // 移除已有的回复框
             const existing = parentCard.querySelector('.reply-box');
             if (existing) { existing.remove(); return; }
@@ -410,7 +559,7 @@
             box.className = 'reply-box';
             box.style.cssText = 'margin-top:10px;padding:10px;background:#fff;border-radius:6px;margin-left:40px;border:1px solid #eee;';
             box.innerHTML = `
-                <textarea placeholder="回复 ${parentComment.userName || '匿名'}..." style="width:100%;height:50px;border:1px solid #ddd;border-radius:4px;padding:6px;font-size:13px;resize:none;box-sizing:border-box;"></textarea>
+                <textarea placeholder="回复 ${parentComment.userName || '匿名'}..." style="width:100%;height:50px;border:1px solid #ddd;border-radius:4px;padding:6px;font-size:13px;resize:none;box-sizing:border-box;user-select:text;-webkit-user-select:text;"></textarea>
                 <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
                     <button class="cancel-btn" style="padding:4px 10px;border:1px solid #ddd;background:#fff;border-radius:4px;cursor:pointer;font-size:12px;">取消</button>
                     <button class="submit-btn" style="padding:4px 10px;border:none;background:#bd1c2b;color:#fff;border-radius:4px;cursor:pointer;font-size:12px;">回复</button>
@@ -419,104 +568,43 @@
             
             const textarea = box.querySelector('textarea');
             const cancelBtn = box.querySelector('.cancel-btn');
-            const submitBtn = box.querySelector('.submit-btn');
+            const replySubmitBtn = box.querySelector('.submit-btn');
             
             cancelBtn.onclick = () => box.remove();
-            submitBtn.onclick = async () => {
+            replySubmitBtn.onclick = async () => {
                 const content = textarea.value.trim();
-                if (!content) return;
+                if (!content || !currentContext) return;
                 
-                submitBtn.textContent = '发送中...';
-                submitBtn.disabled = true;
+                replySubmitBtn.textContent = '发送中...';
+                replySubmitBtn.disabled = true;
                 
                 try {
                     await apiRequest(apiBase + '/api/v1/comments', {
                         method: 'POST',
                         body: JSON.stringify({
                             siteId, workId, chapterId,
-                            paraIndex: currentParaIndex,
+                            paraIndex: currentContext.paraIndex,
                             content,
                             parentId: parentComment.id
                         })
                     });
                     box.remove();
-                    await loadComments();
-                    showComments(currentParaIndex);
+                    await loadContainerComments(workId, chapterId);
+                    const root = document.querySelector(`[data-chapter-id="${chapterId}"]`);
+                    if (root) updateContainerBadges(root, chapterId);
+                    showComments(workId, chapterId, currentContext.paraIndex);
                     showToast('✅ 回复成功');
                 } catch (e) {
                     console.error(e);
                     showToast('❌ 回复失败');
-                    submitBtn.textContent = '回复';
-                    submitBtn.disabled = false;
+                    replySubmitBtn.textContent = '回复';
+                    replySubmitBtn.disabled = false;
                 }
             };
             
             parentCard.appendChild(box);
             textarea.focus();
         }
-        
-        // 显示评论
-        function showComments(paraIndex) {
-            currentParaIndex = paraIndex;
-            sidebar.style.right = '0';
-            
-            const comments = allCommentsData[String(paraIndex)] || [];
-            countEl.textContent = comments.length > 0 ? `(${comments.length})` : '';
-            
-            listEl.innerHTML = '';
-            
-            if (comments.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center;color:#999;padding:40px;">💬<br>暂无评论</div>';
-                return;
-            }
-            
-            comments.forEach(c => {
-                listEl.appendChild(createCommentCard(c));
-            });
-        }
-        
-        // 发布评论
-        submitBtn.onclick = async () => {
-            const content = inputEl.value.trim();
-            if (!content || currentParaIndex === null) return;
-            
-            submitBtn.textContent = '发送中...';
-            submitBtn.disabled = true;
-            
-            try {
-                await apiRequest(apiBase + '/api/v1/comments', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        siteId, workId, chapterId,
-                        paraIndex: currentParaIndex,
-                        content
-                    })
-                });
-                inputEl.value = '';
-                await loadComments();
-                showComments(currentParaIndex);
-                showToast('✅ 发布成功');
-            } catch (e) {
-                console.error(e);
-                showToast('❌ 发布失败');
-            } finally {
-                submitBtn.textContent = '发布';
-                submitBtn.disabled = false;
-            }
-        };
-        
-        // 段落点击事件
-        paras.forEach((p, idx) => {
-            p.style.cursor = 'pointer';
-            p.onclick = (e) => {
-                if (e.target.tagName === 'A') return;
-                showComments(idx);
-            };
-        });
-        
-        // 初始化
-        loadComments();
-        console.log('[ParaNote] Embed initialized');
     }
 
     // ==================== 辅助函数 ====================
