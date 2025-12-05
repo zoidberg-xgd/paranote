@@ -101,13 +101,22 @@
         }
     }
 
-    function enableParaNote() {
+    async function enableParaNote() {
         if (isActive) return;
         
         console.log('[ParaNote] Enabling...');
         
-        // 查找所有内容容器 (知乎有多个回答)
-        const containers = findAllContentContainers();
+        // 等待动态内容加载（最多等待3秒）
+        let containers = findAllContentContainers();
+        if (containers.length === 0) {
+            console.log('[ParaNote] No content found, waiting for dynamic content...');
+            for (let i = 0; i < 6; i++) {
+                await new Promise(r => setTimeout(r, 500));
+                containers = findAllContentContainers();
+                if (containers.length > 0) break;
+            }
+        }
+        
         if (containers.length === 0) {
             alert('ParaNote: 未找到文章内容区域。\n请尝试设置自定义选择器。');
             return;
@@ -663,6 +672,32 @@
         '.main-content',
         '#content',
         '.rich_media_content', // 微信公众号
+        // 小说网站常用选择器
+        '#read',           // 笔趣阁等
+        '#chaptercontent',
+        '#content',
+        '#booktxt',
+        '#htmlContent',
+        '.chapter-content',
+        '.read-content',
+        '.novel-content',
+        '.book-content',
+        '.text-content',
+        '.nr_nr',
+        '#nr',
+        '#nr1',
+        '.nr',
+        '#TextContent',
+        '.readcontent',
+        '#booktext',
+        '.booktext',
+        '#contentbox',
+        '.contentbox',
+        'div[id*="content"]',
+        'div[class*="content"]',
+        'div[id*="chapter"]',
+        'div[class*="chapter"]',
+        'div[id*="read"]',
     ];
 
     // 查找所有内容容器（支持知乎多个回答）
@@ -701,9 +736,32 @@
 
         // 通用选择器（只返回第一个）
         for (const selector of DEFAULT_SELECTORS) {
-            const el = document.querySelector(selector);
-            if (el && el.querySelectorAll('p').length >= 2) {
-                return [el];
+            try {
+                const el = document.querySelector(selector);
+                if (el) {
+                    // 优先检查 <p> 标签
+                    if (el.querySelectorAll('p').length >= 2) {
+                        return [el];
+                    }
+                    // 有些小说网站用 <br> 分隔文本，检查文本长度
+                    if (el.textContent && el.textContent.trim().length > 200) {
+                        return [el];
+                    }
+                }
+            } catch (e) {
+                // 忽略无效选择器
+            }
+        }
+        
+        // 最后尝试：查找包含大量文本的 div
+        const allDivs = document.querySelectorAll('div');
+        for (const div of allDivs) {
+            const text = div.textContent?.trim() || '';
+            const childDivs = div.querySelectorAll('div').length;
+            // 文本长度大于500且子div少于5个（避免选中整个页面）
+            if (text.length > 500 && childDivs < 5 && div.querySelectorAll('a').length < 10) {
+                console.log('[ParaNote] Found content by text length heuristic');
+                return [div];
             }
         }
         

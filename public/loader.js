@@ -47,6 +47,25 @@
     'main',
     '[role="main"]',
     '.main-content',
+    '#content',
+    '.rich_media_content', // 微信公众号
+    // 小说网站常用选择器
+    '#read',
+    '#chaptercontent',
+    '#booktxt',
+    '#htmlContent',
+    '.chapter-content',
+    '.read-content',
+    '.novel-content',
+    '.book-content',
+    '.text-content',
+    '#nr',
+    '#nr1',
+    '.nr',
+    '#TextContent',
+    '.readcontent',
+    '#booktext',
+    '.booktext',
   ];
 
   /**
@@ -84,9 +103,20 @@
 
     // 尝试默认选择器
     for (const selector of DEFAULT_SELECTORS) {
-      const el = document.querySelector(selector);
-      if (el && el.querySelectorAll('p').length > 0) {
-        return el;
+      try {
+        const el = document.querySelector(selector);
+        if (el) {
+          // 优先检查 <p> 标签
+          if (el.querySelectorAll('p').length > 0) {
+            return el;
+          }
+          // 有些小说网站用 <br> 分隔文本，检查文本长度
+          if (el.textContent && el.textContent.trim().length > 200) {
+            return el;
+          }
+        }
+      } catch (e) {
+        // 忽略无效选择器
       }
     }
 
