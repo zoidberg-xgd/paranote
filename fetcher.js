@@ -100,9 +100,13 @@ async function fetchWithPuppeteer(targetUrl) {
 
   console.log(`[BrowserForge] Launching browser with fingerprint: ${fingerprint.fingerprint.userAgent.slice(0, 50)}...`);
 
+  // 使用随机目录避免锁冲突
+  const randomId = Math.random().toString(36).substring(2, 10);
+  const userDataDir = `${config.puppeteer.userDataDir}_${randomId}`;
+
   const browser = await puppeteer.launch({
     headless: config.puppeteer.headless ? "new" : false,
-    userDataDir: config.puppeteer.userDataDir,
+    userDataDir,
     ignoreDefaultArgs: ["--enable-automation"],
     args: puppeteerArgs,
   });
@@ -159,6 +163,13 @@ async function fetchWithPuppeteer(targetUrl) {
     return finalContent || (await page.content());
   } finally {
     await browser.close();
+    // 清理临时目录
+    try {
+      const fs = await import('fs');
+      fs.rmSync(userDataDir, { recursive: true, force: true });
+    } catch {
+      // ignore cleanup errors
+    }
   }
 }
 
