@@ -365,10 +365,11 @@
                 p.onclick = (e) => {
                     if (e.target.tagName === 'A') return;
                     // 点击同一段落时切换侧边栏
+                    const isOpen = sidebar.style.right === '0' || sidebar.style.right === '0px';
                     if (currentContext && 
                         currentContext.chapterId === chapterId && 
                         currentContext.paraIndex === idx &&
-                        sidebar.style.right === '0px') {
+                        isOpen) {
                         // 关闭侧边栏
                         sidebar.style.right = '-350px';
                         currentContext = null;
