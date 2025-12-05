@@ -37,7 +37,16 @@ docker run -d -p 4000:4000 -v $(pwd)/data:/app/data paranote
 **本地开发**
 ```bash
 npm install
+
+# 完整模式 (首页 + 阅读器 + API)
 npm start
+
+# 仅 API 模式 (低内存，适合嵌入式使用)
+npm run start:api
+
+# 阅读器模式 (API + 阅读器，无首页)
+npm run start:reader
+
 # http://localhost:4000
 ```
 
