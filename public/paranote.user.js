@@ -296,11 +296,31 @@
                 if (!badge) {
                     badge = document.createElement('span');
                     badge.className = 'na-badge';
-                    badge.style.cssText = 'display:inline-block;margin-left:6px;padding:2px 6px;font-size:11px;color:#fff;background:#bd1c2b;border-radius:10px;cursor:pointer;font-weight:500;';
                     p.appendChild(badge);
                 }
-                badge.textContent = count > 0 ? count : '';
-                badge.style.display = count > 0 ? 'inline-block' : 'none';
+                
+                // 气泡样式：有评论红色，无评论灰色
+                const hasComments = count > 0;
+                badge.style.cssText = `
+                    display: inline-block !important;
+                    margin-left: 6px !important;
+                    padding: 2px 8px !important;
+                    font-size: 12px !important;
+                    color: #fff !important;
+                    background: ${hasComments ? '#bd1c2b' : '#ccc'} !important;
+                    border-radius: 10px !important;
+                    cursor: pointer !important;
+                    font-weight: 600 !important;
+                    line-height: 1.2 !important;
+                    vertical-align: middle !important;
+                    text-decoration: none !important;
+                    border: none !important;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+                    transition: background 0.2s !important;
+                `.replace(/\s+/g, ' ');
+                badge.textContent = count;
+                badge.onmouseenter = () => badge.style.background = '#bd1c2b';
+                badge.onmouseleave = () => badge.style.background = hasComments ? '#bd1c2b' : '#ccc';
             });
         }
         
@@ -344,7 +364,17 @@
                 p.style.cursor = 'pointer';
                 p.onclick = (e) => {
                     if (e.target.tagName === 'A') return;
-                    showComments(workId, chapterId, idx);
+                    // 点击同一段落时切换侧边栏
+                    if (currentContext && 
+                        currentContext.chapterId === chapterId && 
+                        currentContext.paraIndex === idx &&
+                        sidebar.style.right === '0px') {
+                        // 关闭侧边栏
+                        sidebar.style.right = '-350px';
+                        currentContext = null;
+                    } else {
+                        showComments(workId, chapterId, idx);
+                    }
                 };
             });
         });
