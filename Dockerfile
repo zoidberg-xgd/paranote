@@ -1,5 +1,6 @@
 # 使用轻量级 Node.js 镜像
-FROM node:18-slim
+# Node 20+ required for jsdom/webidl-conversions (ArrayBuffer.prototype.resizable)
+FROM node:20-slim
 
 # 安装 Puppeteer 所需的系统依赖
 # 这些是运行 Headless Chrome 必不可少的库
