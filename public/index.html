@@ -3,84 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ParaNote - 网页导入</title>
+    <title>ParaNote</title>
     <style>
+        * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            text-align: center;
-            background-color: #f9f9f9;
-        }
-        h1 { color: #333; margin-bottom: 40px; }
-        .input-group {
-            display: flex;
-            gap: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             max-width: 600px;
             margin: 0 auto;
+            padding: 40px 20px;
+            background: #f9f9f9;
+            color: #333;
         }
+        h1 { margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
         input {
             flex: 1;
             padding: 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 16px;
-            outline: none;
+            font-size: 15px;
         }
-        input:focus { border-color: #f56c6c; }
+        input:focus { border-color: #f56c6c; outline: none; }
         button {
-            padding: 12px 24px;
-            background-color: #f56c6c;
-            color: white;
+            padding: 12px 20px;
+            background: #f56c6c;
+            color: #fff;
             border: none;
             border-radius: 4px;
-            font-size: 16px;
             cursor: pointer;
-            transition: background 0.2s;
+            font-size: 15px;
         }
-        button:hover { background-color: #ff4757; }
-        .desc {
-            margin-top: 40px;
-            color: #666;
-            font-size: 14px;
-            line-height: 1.6;
-        }
+        button:hover { background: #e74c3c; }
+        .mode-select { margin-bottom: 20px; font-size: 14px; color: #666; }
+        .mode-select label { margin-right: 15px; cursor: pointer; }
+        .links { margin-top: 30px; font-size: 13px; color: #999; }
+        .links a { color: #f56c6c; text-decoration: none; margin: 0 8px; }
+        .links a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <h1>ParaNote 阅读器</h1>
-    <form action="/read" method="GET" class="input-group">
-        <input type="url" name="url" placeholder="输入文章 URL (例如: https://example.com/article)" required>
-        <button type="submit">阅读并评论</button>
-    </form>
-    <div class="desc">
-        <p>输入任意网页链接，ParaNote 将自动提取正文生成<b>纯净阅读模式</b>，并开启段落评论。</p>
-        <p>支持 Telegra.ph、微信公众号、知乎专栏、以及大多数新闻/博客网站。</p>
-        <div style="margin-top: 20px; font-size: 12px;">
-             <a href="#" id="mode-switch" style="color: #999; text-decoration: none; border-bottom: 1px dashed #ccc;">当前模式：纯净阅读 (点击切换)</a>
-        </div>
+    <h1>📝 ParaNote</h1>
+    <p class="subtitle">段落评论 API</p>
+    
+    <div class="input-group">
+        <input type="url" id="url" placeholder="输入文章 URL">
+        <button onclick="go()">阅读</button>
     </div>
     
-    <script>
-        const form = document.querySelector('form');
-        const switchBtn = document.getElementById('mode-switch');
-        let isImportMode = false;
+    <div class="mode-select">
+        <label><input type="radio" name="mode" value="reader" checked> 纯净模式</label>
+        <label><input type="radio" name="mode" value="raw"> 原样模式</label>
+    </div>
+    
+    <div class="links">
+        <a href="/docs">API 文档</a>
+        <a href="/paranote.user.js">油猴脚本</a>
+        <a href="https://github.com/zoidberg-xgd/paranote" target="_blank">GitHub</a>
+    </div>
 
-        switchBtn.onclick = function(e) {
-            e.preventDefault();
-            isImportMode = !isImportMode;
-            
-            if (isImportMode) {
-                form.action = '/import';
-                switchBtn.innerText = '当前模式：原样导入 (点击切换回纯净阅读)';
-                switchBtn.style.color = '#f56c6c';
-            } else {
-                form.action = '/read';
-                switchBtn.innerText = '当前模式：纯净阅读 (点击切换)';
-                switchBtn.style.color = '#999';
-            }
-        };
+    <script>
+        function go() {
+            const url = document.getElementById('url').value.trim();
+            if (!url) return;
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            location.href = `/public/reader.html?url=${encodeURIComponent(url)}&mode=${mode}`;
+        }
+        document.getElementById('url').onkeydown = e => e.key === 'Enter' && go();
     </script>
 </body>
 </html>

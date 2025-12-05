@@ -13,15 +13,30 @@ services:
       # - ./puppeteer_data:/app/puppeteer_data
     environment:
       - NODE_ENV=production
-      - PUPPETEER_HEADLESS=true
-      # --- 高级配置 ---
-      # 禁用 Puppeteer 以节省内存 (如果你不需要绕过 Cloudflare)
-      # - ENABLE_PUPPETEER=false
-      # 切换到 MongoDB 存储 (适合 Render/Zeabur 等无持久化平台)
+      - PORT=4000
+      # --- 部署模式 ---
+      # full: 完整部署 (首页 + 阅读器 + 所有API)
+      # api: 仅核心API (评论CRUD，无抓取)
+      # reader: API + 阅读器 (含抓取，无首页)
+      - DEPLOY_MODE=full
+      # --- 存储配置 ---
+      - STORAGE_TYPE=file
+      # 切换到 MongoDB (适合 Render/Zeabur 等无持久化平台)
       # - STORAGE_TYPE=mongo
       # - MONGO_URI=mongodb+srv://user:pass@host/db
-      # 配置站点密钥 (JSON 格式)
-      # - SITE_SECRETS={"default-site":"change-me-secret"}
+      # --- Puppeteer 配置 ---
+      - PUPPETEER_HEADLESS=true
+      - PUPPETEER_TIMEOUT=60000
+      # 禁用 Puppeteer 以节省内存 (<100MB)
+      # - ENABLE_PUPPETEER=false
+      # --- 安全配置 ---
+      # 管理员密钥 (导入导出数据)
+      # - ADMIN_SECRET=your_strong_secret_key
+      # JWT 站点密钥 (JSON 格式)
+      # - SITE_SECRETS={"my-site":"change-me-secret"}
+      # --- 速率限制 ---
+      - RATE_LIMIT=true
+      - RATE_LIMIT_MAX=100
     restart: always
     # 限制资源，防止 Puppeteer 占用过多内存
     deploy:

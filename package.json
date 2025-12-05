@@ -5,10 +5,15 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server-new.js",
+    "start:legacy": "node server.js",
+    "start:api": "DEPLOY_MODE=api node server-new.js",
+    "start:reader": "DEPLOY_MODE=reader node server-new.js",
     "build:embed": "esbuild public/embed.js --bundle --minify --format=iife --global-name=ParaNoteEmbed --outfile=dist/paranote.min.js",
     "lint": "eslint .",
-    "test": "vitest"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "comments",
@@ -29,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@vitest/coverage-v8": "^4.0.15",
     "esbuild": "^0.24.0",
     "eslint": "^9.0.0",
     "globals": "^15.0.0",

@@ -36,8 +36,31 @@ export function createFileStorage() {
   return {
     async listComments({ siteId, workId, chapterId }) {
       const all = await readAll(siteId, workId, chapterId);
-      // Sort by heat (likes) desc, then time desc
-      all.sort((a, b) => {
+      
+      // 分离顶级评论和回复
+      const topLevel = all.filter(c => !c.parentId);
+      const replies = all.filter(c => c.parentId);
+      
+      // 构建回复映射
+      const replyMap = {};
+      for (const reply of replies) {
+        if (!replyMap[reply.parentId]) replyMap[reply.parentId] = [];
+        replyMap[reply.parentId].push(reply);
+      }
+      
+      // 为每个评论附加回复（按时间排序）
+      function attachReplies(comment) {
+        const commentReplies = replyMap[comment.id] || [];
+        commentReplies.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        return {
+          ...comment,
+          replies: commentReplies.map(attachReplies),  // 递归支持多层回复
+          replyCount: commentReplies.length,
+        };
+      }
+      
+      // 顶级评论按热度排序
+      topLevel.sort((a, b) => {
         const likesA = a.likes || 0;
         const likesB = b.likes || 0;
         if (likesA !== likesB) return likesB - likesA;
@@ -45,10 +68,10 @@ export function createFileStorage() {
       });
 
       const grouped = {};
-      for (const c of all) {
+      for (const c of topLevel) {
         const key = String(c.paraIndex);
         if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(c);
+        grouped[key].push(attachReplies(c));
       }
       return grouped;
     },

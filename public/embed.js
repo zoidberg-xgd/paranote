@@ -1,22 +1,67 @@
 (function () {
-  const script = document.currentScript;
-  if (!script) return;
+  // 支持油猴脚本注入的配置
+  const config = window.__paranoteConfig || {};
+  const script = document.currentScript || {};
 
-  console.log("ParaNote: Script loaded");
+  console.log("ParaNote: Script loaded", config);
 
-  const siteId = script.dataset.siteId || "default-site";
+  const siteId = config.siteId || script.dataset?.siteId || "default-site";
   
   // Allow explicit empty string for relative paths
-  let apiBase = script.getAttribute("data-api-base");
-  if (apiBase === null) {
-      apiBase = (script.src && new URL(script.src).origin.replace(/\/$/, "")) || "";
+  let apiBase = config.apiBase;
+  if (apiBase === undefined) {
+      apiBase = script.getAttribute?.("data-api-base");
+      if (apiBase === null) {
+          apiBase = (script.src && new URL(script.src).origin.replace(/\/$/, "")) || "";
+      }
+  }
+  
+  // 使用油猴的 GM_xmlhttpRequest 或普通 fetch
+  // 油猴脚本会注入 window.__paranoteRequest
+  async function apiRequest(url, options = {}) {
+    // 如果有油猴注入的请求函数，使用它（绑过 CSP）
+    if (window.__paranoteRequest) {
+      return window.__paranoteRequest(url, options);
+    }
+    // 否则使用普通 fetch
+    const res = await fetch(url, options);
+    return res.json();
+  }
+  
+  async function apiPost(url, data) {
+    const headers = { "Content-Type": "application/json" };
+    if (typeof window !== "undefined" && window.PARANOTE_TOKEN) {
+      headers["X-Paranote-Token"] = window.PARANOTE_TOKEN;
+    }
+    return apiRequest(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(data),
+    });
+  }
+  
+  async function apiGet(url) {
+    return apiRequest(url, { method: "GET" });
+  }
+  
+  async function apiDelete(url, data) {
+    const headers = { "Content-Type": "application/json" };
+    if (typeof window !== "undefined" && window.PARANOTE_TOKEN) {
+      headers["X-Paranote-Token"] = window.PARANOTE_TOKEN;
+    }
+    return apiRequest(url, {
+      method: "DELETE",
+      headers,
+      body: JSON.stringify(data),
+    });
   }
 
   function init() {
-      const root = document.querySelector("[data-na-root]");
-      console.log("ParaNote: Checking root...", root);
+      // 支持多个 root（知乎多个回答）
+      const roots = document.querySelectorAll("[data-na-root]");
+      console.log("ParaNote: Checking roots...", roots.length);
       
-      if (!root) {
+      if (roots.length === 0) {
           console.log("ParaNote: Root not found, waiting for DOMContentLoaded...");
           if (document.readyState === "loading") {
               document.addEventListener("DOMContentLoaded", init);
@@ -26,11 +71,14 @@
           return;
       }
       
-      // Removed check for apiBase since empty string is now valid (relative path)
-
+      // 初始化每个 root
+      roots.forEach((root, index) => initRoot(root, index));
+  }
+  
+  function initRoot(root, rootIndex) {
       // Check if already initialized
       if (root.dataset.paranoteInitialized) {
-          console.log("ParaNote: Already initialized");
+          console.log(`ParaNote: Root ${rootIndex} already initialized`);
           return;
       }
       root.dataset.paranoteInitialized = "true";
@@ -39,7 +87,7 @@
       const chapterId = root.dataset.chapterId || root.dataset.ChapterId || "default-chapter";
       const paras = root.querySelectorAll("p");
 
-      console.log(`ParaNote: Found ${paras.length} paragraphs`);
+      console.log(`ParaNote: Root ${rootIndex} - Found ${paras.length} paragraphs, chapterId: ${chapterId}`);
 
       if (!paras.length) {
           console.warn("ParaNote: No paragraphs found in root");
@@ -295,22 +343,14 @@
           try {
             btn.textContent = "发送中...";
             btn.disabled = true;
-            const headers = { "Content-Type": "application/json" };
-            if (typeof window !== "undefined" && window.PARANOTE_TOKEN) {
-              headers["X-Paranote-Token"] = window.PARANOTE_TOKEN;
-            }
 
-            await fetch(apiBase + "/api/v1/comments", {
-              method: "POST",
-              headers,
-              body: JSON.stringify({
-                siteId,
-                workId,
-                chapterId,
-                paraIndex: currentParaIndex,
-                content,
-                contextText, // 发送指纹
-              }),
+            await apiPost(apiBase + "/api/v1/comments", {
+              siteId,
+              workId,
+              chapterId,
+              paraIndex: currentParaIndex,
+              content,
+              contextText,
             });
             textarea.value = "";
             await loadAllComments();
@@ -405,8 +445,7 @@
             encodeURIComponent(workId) +
             "&chapterId=" +
             encodeURIComponent(chapterId);
-          const res = await fetch(url);
-          const data = await res.json();
+          const data = await apiGet(url);
           
           // 执行模糊定位纠正
           allCommentsData = reanchorComments(data.commentsByPara || {});
@@ -569,42 +608,46 @@
               content.textContent = contentText;
           }
           
-          // 操作栏（点赞 + 删除）
+          // 操作栏（回复 + 点赞 + 删除）
           const actionContainer = document.createElement("div");
-          actionContainer.style.cssText = "display: flex; justify-content: flex-end; align-items: center; margin-top: 8px; padding-left: 42px;";
+          actionContainer.style.cssText = "display: flex; justify-content: flex-end; align-items: center; margin-top: 8px; padding-left: 42px; gap: 8px;";
+          
+          // 回复按钮
+          const replyBtn = document.createElement("button");
+          replyBtn.innerHTML = "💬 回复";
+          replyBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#666; font-size:12px; transition:color 0.2s;";
+          replyBtn.onmouseenter = () => replyBtn.style.color = "#bd1c2b";
+          replyBtn.onmouseleave = () => replyBtn.style.color = "#666";
+          replyBtn.onclick = function(e) {
+            e.stopPropagation();
+            showReplyInput(item, c, paraIndex, listEl, headerCountEl);
+          };
+          actionContainer.appendChild(replyBtn);
           
           // 删除按钮（管理员或作者都可以删除）
           if (isAdmin || isAuthor) {
             const delBtn = document.createElement("button");
             delBtn.innerHTML = "🗑️";
             delBtn.title = isAuthor ? "删除（作者）" : "删除（管理员）";
-            delBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#aaa; font-size:14px; margin-right: 12px; transition:color 0.2s;";
+            delBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#aaa; font-size:14px; transition:color 0.2s;";
             delBtn.onmouseenter = () => delBtn.style.color = "#bd1c2b";
             delBtn.onmouseleave = () => delBtn.style.color = "#aaa";
             delBtn.onclick = async function(e) {
               e.stopPropagation();
               if(!confirm("确定删除这条评论吗？")) return;
               try {
-                 const headers = { "Content-Type": "application/json" };
-                 if (token) headers["X-Paranote-Token"] = token;
-                 
                  const deleteData = { siteId, workId, chapterId, commentId: c.id };
                  if (editToken) {
                    deleteData.editToken = editToken;
                  }
                  
-                 const res = await fetch(apiBase + "/api/v1/comments", {
-                     method: "DELETE",
-                     headers,
-                     body: JSON.stringify(deleteData)
-                 });
-                 if(res.ok) {
+                 const result = await apiDelete(apiBase + "/api/v1/comments", deleteData);
+                 if (!result.error) {
                      await loadAllComments();
                      updateCommentCounts();
                      await loadComments(paraIndex, listEl, headerCountEl);
                  } else {
-                     const errorData = await res.json().catch(() => ({}));
-                     alert(errorData.error || "删除失败");
+                     alert(result.error || "删除失败");
                  }
               } catch(e) { 
                  console.error(e);
@@ -626,20 +669,12 @@
           likeBtn.onclick = async function(e) {
               e.stopPropagation();
               try {
-                 const headers = { "Content-Type": "application/json" };
-                 if (token) headers["X-Paranote-Token"] = token;
+                 const data = await apiPost(apiBase + "/api/v1/comments/like", { siteId, workId, chapterId, commentId: c.id });
                  
-                 const res = await fetch(apiBase + "/api/v1/comments/like", {
-                     method: "POST",
-                     headers,
-                     body: JSON.stringify({ siteId, workId, chapterId, commentId: c.id })
-                 });
-                 
-                 if(res.status === 401) return alert("请登录后再点赞");
-                 if(res.status === 400) return alert("您已经点过赞了");
+                 if (data.error === 'already_liked') return alert("您已经点过赞了");
+                 if (data.error) return alert(data.error);
 
-                 if(res.ok) {
-                     const data = await res.json();
+                 if (data.likes !== undefined) {
                      likeBtn.innerHTML = `<span style="font-size:14px">❤️</span> <span style="margin-left:4px; font-weight:bold; color:#bd1c2b">${data.likes}</span>`;
                      likeBtn.style.color = "#bd1c2b";
                  }
@@ -652,8 +687,130 @@
           item.appendChild(content);
           item.appendChild(actionContainer);
           
+          // 显示回复（如果有）
+          if (c.replies && c.replies.length > 0) {
+            const repliesContainer = document.createElement("div");
+            repliesContainer.style.cssText = "margin-top: 12px; padding-left: 42px; border-left: 2px solid #eee;";
+            
+            c.replies.forEach(reply => {
+              const replyItem = createReplyItem(reply, paraIndex, listEl, headerCountEl, isAdmin, isAuthor, token, editToken);
+              repliesContainer.appendChild(replyItem);
+            });
+            
+            item.appendChild(repliesContainer);
+          }
+          
           listEl.appendChild(item);
         });
+      }
+      
+      // 创建回复项
+      function createReplyItem(reply, paraIndex, listEl, headerCountEl, isAdmin, isAuthor, token, editToken) {
+        const item = document.createElement("div");
+        item.style.cssText = "padding: 8px 0; border-bottom: 1px solid #f5f5f5;";
+        
+        const name = reply.userName || reply.userId || "匿名";
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        const hue = hash % 360;
+        
+        const header = document.createElement("div");
+        header.style.cssText = "display: flex; align-items: center; margin-bottom: 4px;";
+        
+        const avatar = document.createElement("span");
+        avatar.style.cssText = `width: 20px; height: 20px; border-radius: 50%; background: hsl(${hue}, 60%, 85%); color: hsl(${hue}, 60%, 30%); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; margin-right: 6px;`;
+        avatar.textContent = name.charAt(0).toUpperCase();
+        
+        const userName = document.createElement("span");
+        userName.style.cssText = "font-size: 12px; font-weight: 600; color: #555;";
+        userName.textContent = name;
+        
+        const time = document.createElement("span");
+        time.style.cssText = "font-size: 10px; color: #999; margin-left: 8px;";
+        time.textContent = reply.createdAt ? new Date(reply.createdAt).toLocaleString("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+        
+        header.append(avatar, userName, time);
+        
+        const content = document.createElement("div");
+        content.style.cssText = "font-size: 13px; color: #555; line-height: 1.5; padding-left: 26px;";
+        content.textContent = reply.content;
+        
+        item.append(header, content);
+        
+        // 递归显示嵌套回复
+        if (reply.replies && reply.replies.length > 0) {
+          const nested = document.createElement("div");
+          nested.style.cssText = "margin-left: 26px; margin-top: 8px;";
+          reply.replies.forEach(r => {
+            nested.appendChild(createReplyItem(r, paraIndex, listEl, headerCountEl, isAdmin, isAuthor, token, editToken));
+          });
+          item.appendChild(nested);
+        }
+        
+        return item;
+      }
+      
+      // 显示回复输入框
+      function showReplyInput(parentItem, parentComment, paraIndex, listEl, headerCountEl) {
+        // 移除已有的回复框
+        const existing = parentItem.querySelector(".reply-input-box");
+        if (existing) {
+          existing.remove();
+          return;
+        }
+        
+        const box = document.createElement("div");
+        box.className = "reply-input-box";
+        box.style.cssText = "margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 6px; margin-left: 42px;";
+        
+        const textarea = document.createElement("textarea");
+        textarea.placeholder = `回复 ${parentComment.userName || '匿名'}...`;
+        textarea.style.cssText = "width: 100%; height: 60px; border: 1px solid #ddd; border-radius: 4px; padding: 8px; font-size: 13px; resize: none; box-sizing: border-box;";
+        
+        const btnRow = document.createElement("div");
+        btnRow.style.cssText = "display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;";
+        
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "取消";
+        cancelBtn.style.cssText = "padding: 6px 12px; border: 1px solid #ddd; background: #fff; border-radius: 4px; cursor: pointer; font-size: 12px;";
+        cancelBtn.onclick = () => box.remove();
+        
+        const submitBtn = document.createElement("button");
+        submitBtn.textContent = "回复";
+        submitBtn.style.cssText = "padding: 6px 12px; border: none; background: #bd1c2b; color: #fff; border-radius: 4px; cursor: pointer; font-size: 12px;";
+        submitBtn.onclick = async () => {
+          const content = textarea.value.trim();
+          if (!content) return;
+          
+          try {
+            submitBtn.textContent = "发送中...";
+            submitBtn.disabled = true;
+            
+            await apiPost(apiBase + "/api/v1/comments", {
+              siteId,
+              workId,
+              chapterId,
+              paraIndex,
+              content,
+              parentId: parentComment.id,
+            });
+            
+            box.remove();
+            await loadAllComments();
+            updateCommentCounts();
+            await loadComments(paraIndex, listEl, headerCountEl);
+          } catch (e) {
+            console.error("reply failed", e);
+            alert("回复失败");
+            submitBtn.textContent = "回复";
+            submitBtn.disabled = false;
+          }
+        };
+        
+        btnRow.append(cancelBtn, submitBtn);
+        box.append(textarea, btnRow);
+        parentItem.appendChild(box);
+        textarea.focus();
       }
 
       // 更新段落评论数显示

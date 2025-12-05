@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParaNote Reader</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background: #f9f9f9;
+        }
+        
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #eee;
+            border-top-color: #f56c6c;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { margin-top: 16px; color: #666; font-size: 14px; }
+        
+        .error {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .error h2 { color: #f56c6c; }
+        .error a {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #f56c6c;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        
+        .article-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        article {
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        article h1 {
+            margin-top: 0;
+            font-size: 1.8em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        article img { max-width: 100%; height: auto; display: block; margin: 20px auto; }
+        article a { color: #f56c6c; }
+        article blockquote {
+            border-left: 4px solid #f56c6c;
+            margin: 20px 0;
+            padding: 10px 15px;
+            color: #666;
+            background: #fff9f9;
+        }
+        .meta { color: #888; margin-bottom: 20px; font-size: 14px; }
+        .source-link {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-size: 13px;
+            color: #999;
+        }
+        .source-link a { color: #f56c6c; word-break: break-all; }
+        
+        .toolbar {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+        }
+        .toolbar a {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .toolbar a:hover { background: #f5f5f5; }
+        
+        .raw-container iframe {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">加载中...</div>
+    </div>
+    
+    <div id="error" class="error hidden">
+        <h2>加载失败</h2>
+        <p id="error-msg"></p>
+        <a href="/">返回首页</a>
+    </div>
+    
+    <div id="article-wrapper" class="hidden">
+        <div class="toolbar">
+            <a href="#" onclick="copyLink(); return false;">复制链接</a>
+        </div>
+        <div class="article-container">
+            <article>
+                <h1 id="title"></h1>
+                <div class="meta" id="meta"></div>
+                <div id="content"></div>
+                <div class="source-link" id="source"></div>
+            </article>
+        </div>
+    </div>
+    
+    <div id="raw-wrapper" class="raw-container hidden"></div>
+
+    <script>
+        const params = new URLSearchParams(location.search);
+        const targetUrl = params.get('url');
+        const mode = params.get('mode') || 'reader';
+        const API_BASE = location.origin;
+
+        function showError(msg) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error-msg').textContent = msg;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(location.href).then(() => alert('已复制'));
+        }
+
+        function renderArticle(data) {
+            document.title = data.title + ' - ParaNote';
+            document.getElementById('title').textContent = data.title || '无标题';
+            
+            const meta = [];
+            if (data.byline) meta.push(data.byline);
+            if (data.siteName) meta.push(data.siteName);
+            document.getElementById('meta').textContent = meta.join(' · ');
+            
+            document.getElementById('content').innerHTML = data.content;
+            
+            if (data.sourceUrl) {
+                document.getElementById('source').innerHTML = 
+                    `原文：<a href="${data.sourceUrl}" target="_blank">${data.sourceUrl}</a>`;
+            }
+            
+            document.body.setAttribute('data-na-root', '');
+            document.body.setAttribute('data-site-id', data.siteId);
+            document.body.setAttribute('data-work-id', data.workId);
+            document.body.setAttribute('data-chapter-id', data.chapterId);
+            
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('article-wrapper').classList.remove('hidden');
+            
+            // Load embed script
+            const script = document.createElement('script');
+            script.src = API_BASE + '/embed.js';
+            script.setAttribute('data-site-id', data.siteId);
+            script.setAttribute('data-api-base', API_BASE);
+            document.body.appendChild(script);
+        }
+
+        function renderRaw(data) {
+            const iframe = document.createElement('iframe');
+            iframe.sandbox = 'allow-same-origin allow-scripts allow-forms allow-popups';
+            
+            let html = data.content;
+            html = html.replace(/<body([^>]*)>/i, 
+                `<body$1 data-na-root data-site-id="${data.siteId}" data-work-id="${data.workId}" data-chapter-id="${data.chapterId}">`);
+            
+            const embedScript = `<script src="${API_BASE}/embed.js" data-site-id="${data.siteId}" data-api-base="${API_BASE}"><\/script>`;
+            html = html.includes('</body>') ? html.replace('</body>', embedScript + '</body>') : html + embedScript;
+            
+            document.getElementById('raw-wrapper').appendChild(iframe);
+            iframe.srcdoc = html;
+            
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('raw-wrapper').classList.remove('hidden');
+        }
+
+        async function init() {
+            if (!targetUrl) {
+                showError('请提供 URL 参数');
+                return;
+            }
+            
+            document.getElementById('loading-text').textContent = '正在抓取...';
+            
+            try {
+                const resp = await fetch(`${API_BASE}/api/v1/fetch?url=${encodeURIComponent(targetUrl)}&mode=${mode}`);
+                const data = await resp.json();
+                
+                if (!resp.ok) throw new Error(data.message || data.error || '请求失败');
+                
+                if (data.mode === 'raw') {
+                    renderRaw(data);
+                } else {
+                    renderArticle(data);
+                }
+            } catch (e) {
+                showError(e.message);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

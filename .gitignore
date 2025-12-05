@@ -3,3 +3,5 @@ data
 npm-debug.log*
 .DS_Store
 puppeteer_data
+h/
+coverage/

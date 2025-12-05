@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParaNote API 文档</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            background: #fff;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 { border-bottom: 2px solid #f56c6c; padding-bottom: 10px; }
+        h2 { margin-top: 40px; color: #f56c6c; }
+        h3 { margin-top: 25px; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 14px; }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        pre code { background: none; padding: 0; color: inherit; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f9f9f9; }
+        .method { 
+            display: inline-block; 
+            padding: 3px 8px; 
+            border-radius: 3px; 
+            font-size: 12px; 
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .get { background: #61affe; color: #fff; }
+        .post { background: #49cc90; color: #fff; }
+        .delete { background: #f93e3e; color: #fff; }
+        .endpoint { font-family: monospace; font-size: 15px; }
+        .nav { margin-bottom: 30px; font-size: 14px; }
+        .nav a { color: #f56c6c; margin-right: 15px; text-decoration: none; }
+        .nav a:hover { text-decoration: underline; }
+        .note { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 15px; margin: 15px 0; }
+        .section { margin-bottom: 50px; }
+    </style>
+</head>
+<body>
+    <h1>📝 ParaNote API 文档</h1>
+    
+    <div class="nav">
+        <a href="/">首页</a>
+        <a href="#comments">评论 API</a>
+        <a href="#fetch">抓取 API</a>
+        <a href="#admin">管理 API</a>
+        <a href="#integration">集成</a>
+    </div>
+
+    <!-- 评论 API -->
+    <div class="section" id="comments">
+        <h2>评论 API</h2>
+        
+        <h3><span class="method get">GET</span><span class="endpoint">/api/v1/comments</span></h3>
+        <p>获取指定章节的所有评论</p>
+        
+        <h4>Query 参数</h4>
+        <table>
+            <tr><th>参数</th><th>必填</th><th>说明</th></tr>
+            <tr><td><code>siteId</code></td><td>是</td><td>站点 ID</td></tr>
+            <tr><td><code>workId</code></td><td>是</td><td>作品/文章 ID</td></tr>
+            <tr><td><code>chapterId</code></td><td>是</td><td>章节 ID</td></tr>
+        </table>
+        
+        <h4>请求示例</h4>
+        <pre><code>curl "http://localhost:4000/api/v1/comments?siteId=my-site&workId=article-1&chapterId=ch-1"</code></pre>
+        
+        <h4>响应</h4>
+        <pre><code>{
+  "commentsByPara": {
+    "0": [
+      {
+        "id": "abc123",
+        "content": "评论内容",
+        "userName": "用户名",
+        "userId": "user-id",
+        "likes": 5,
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "3": [...]
+  }
+}</code></pre>
+
+        <hr>
+
+        <h3><span class="method post">POST</span><span class="endpoint">/api/v1/comments</span></h3>
+        <p>发布新评论</p>
+        
+        <h4>Body 参数 (JSON)</h4>
+        <table>
+            <tr><th>参数</th><th>必填</th><th>说明</th></tr>
+            <tr><td><code>siteId</code></td><td>是</td><td>站点 ID</td></tr>
+            <tr><td><code>workId</code></td><td>是</td><td>作品/文章 ID</td></tr>
+            <tr><td><code>chapterId</code></td><td>是</td><td>章节 ID</td></tr>
+            <tr><td><code>paraIndex</code></td><td>是</td><td>段落索引 (从 0 开始)</td></tr>
+            <tr><td><code>content</code></td><td>是</td><td>评论内容 (1-1000 字符)</td></tr>
+            <tr><td><code>contextText</code></td><td>否</td><td>段落上下文 (用于模糊定位)</td></tr>
+        </table>
+        
+        <h4>请求示例</h4>
+        <pre><code>curl -X POST http://localhost:4000/api/v1/comments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "siteId": "my-site",
+    "workId": "article-1",
+    "chapterId": "ch-1",
+    "paraIndex": 0,
+    "content": "这段写得真好！"
+  }'</code></pre>
+
+        <hr>
+
+        <h3><span class="method post">POST</span><span class="endpoint">/api/v1/comments/like</span></h3>
+        <p>点赞评论</p>
+        
+        <h4>Body 参数 (JSON)</h4>
+        <table>
+            <tr><th>参数</th><th>必填</th><th>说明</th></tr>
+            <tr><td><code>siteId</code></td><td>是</td><td>站点 ID</td></tr>
+            <tr><td><code>workId</code></td><td>是</td><td>作品/文章 ID</td></tr>
+            <tr><td><code>chapterId</code></td><td>是</td><td>章节 ID</td></tr>
+            <tr><td><code>commentId</code></td><td>是</td><td>评论 ID</td></tr>
+        </table>
+        
+        <pre><code>curl -X POST http://localhost:4000/api/v1/comments/like \
+  -H "Content-Type: application/json" \
+  -d '{"siteId":"my-site","workId":"article-1","chapterId":"ch-1","commentId":"abc123"}'</code></pre>
+
+        <hr>
+
+        <h3><span class="method delete">DELETE</span><span class="endpoint">/api/v1/comments</span></h3>
+        <p>删除评论 (需要是评论作者或管理员)</p>
+        
+        <h4>Body 参数 (JSON)</h4>
+        <table>
+            <tr><th>参数</th><th>必填</th><th>说明</th></tr>
+            <tr><td><code>siteId</code></td><td>是</td><td>站点 ID</td></tr>
+            <tr><td><code>workId</code></td><td>是</td><td>作品/文章 ID</td></tr>
+            <tr><td><code>chapterId</code></td><td>是</td><td>章节 ID</td></tr>
+            <tr><td><code>commentId</code></td><td>是</td><td>评论 ID</td></tr>
+        </table>
+    </div>
+
+    <!-- 抓取 API -->
+    <div class="section" id="fetch">
+        <h2>抓取 API</h2>
+        
+        <h3><span class="method get">GET</span><span class="endpoint">/api/v1/fetch</span></h3>
+        <p>抓取并解析网页内容</p>
+        
+        <h4>Query 参数</h4>
+        <table>
+            <tr><th>参数</th><th>必填</th><th>说明</th></tr>
+            <tr><td><code>url</code></td><td>是</td><td>目标网页 URL</td></tr>
+            <tr><td><code>mode</code></td><td>否</td><td><code>reader</code> (默认) 或 <code>raw</code></td></tr>
+        </table>
+        
+        <h4>请求示例</h4>
+        <pre><code># 纯净阅读模式 (提取正文)
+curl "http://localhost:4000/api/v1/fetch?url=https://example.com/article&mode=reader"
+
+# 原样模式 (保留原始 HTML)
+curl "http://localhost:4000/api/v1/fetch?url=https://example.com/article&mode=raw"</code></pre>
+        
+        <h4>响应</h4>
+        <pre><code>{
+  "title": "文章标题",
+  "content": "&lt;p&gt;正文内容...&lt;/p&gt;",
+  "byline": "作者",
+  "siteName": "example.com",
+  "sourceUrl": "https://example.com/article",
+  "workId": "r_xxx",
+  "siteId": "paranote-reader",
+  "chapterId": "index",
+  "mode": "reader"
+}</code></pre>
+
+        <div class="note">
+            <strong>反爬机制：</strong>使用 BrowserForge 智能指纹，自动生成真实的浏览器头。遇到 Cloudflare 时自动降级到 Puppeteer。
+        </div>
+    </div>
+
+    <!-- 管理 API -->
+    <div class="section" id="admin">
+        <h2>管理 API</h2>
+        <p>需要在请求头中携带 <code>x-admin-secret</code>，值为环境变量 <code>ADMIN_SECRET</code>。</p>
+        
+        <h3><span class="method get">GET</span><span class="endpoint">/api/v1/export</span></h3>
+        <p>导出所有评论数据</p>
+        <pre><code>curl -H "x-admin-secret: YOUR_SECRET" http://localhost:4000/api/v1/export -o backup.json</code></pre>
+
+        <h3><span class="method post">POST</span><span class="endpoint">/api/v1/import</span></h3>
+        <p>导入评论数据</p>
+        <pre><code>curl -X POST -H "x-admin-secret: YOUR_SECRET" \
+  -H "Content-Type: application/json" \
+  -d @backup.json http://localhost:4000/api/v1/import</code></pre>
+    </div>
+
+    <!-- 集成 -->
+    <div class="section" id="integration">
+        <h2>集成方式</h2>
+        
+        <h3>方式一：嵌入脚本</h3>
+        <p>在你的网页中添加：</p>
+        <pre><code>&lt;!-- 标记内容区域 --&gt;
+&lt;article data-na-root data-site-id="my-site" data-work-id="article-1" data-chapter-id="ch-1"&gt;
+  &lt;p&gt;段落内容...&lt;/p&gt;
+&lt;/article&gt;
+
+&lt;!-- 引入脚本 --&gt;
+&lt;script src="http://your-server/embed.js" data-site-id="my-site"&gt;&lt;/script&gt;</code></pre>
+
+        <h3>方式二：自动加载器</h3>
+        <pre><code>&lt;script src="http://your-server/loader.js" data-site-id="my-site"&gt;&lt;/script&gt;</code></pre>
+        <p>自动检测 <code>article</code>, <code>.content</code>, <code>.post</code> 等容器。</p>
+
+        <h3>方式三：油猴脚本</h3>
+        <p>访问 <a href="/paranote.user.js">/paranote.user.js</a> 安装，然后在任意网站按 <code>Alt+P</code> 启用。</p>
+
+        <h3>JWT 用户认证</h3>
+        <p>在页面中设置 Token：</p>
+        <pre><code>&lt;script&gt;
+window.PARANOTE_TOKEN = jwt.sign({
+  siteId: 'my-site',
+  sub: 'user-123',
+  name: '用户名',
+  role: 'admin'  // 可选，管理员可删除任意评论
+}, 'YOUR_SITE_SECRET');
+&lt;/script&gt;</code></pre>
+        
+        <p>服务端配置 <code>SITE_SECRETS</code> 环境变量：</p>
+        <pre><code>SITE_SECRETS='{"my-site":"YOUR_SITE_SECRET"}'</code></pre>
+    </div>
+
+    <!-- 部署 -->
+    <div class="section">
+        <h2>部署</h2>
+        
+        <h3>环境变量</h3>
+        <table>
+            <tr><th>变量</th><th>默认值</th><th>说明</th></tr>
+            <tr><td><code>PORT</code></td><td>4000</td><td>服务端口</td></tr>
+            <tr><td><code>DEPLOY_MODE</code></td><td>full</td><td>full / api / reader</td></tr>
+            <tr><td><code>STORAGE_TYPE</code></td><td>file</td><td>file / mongo</td></tr>
+            <tr><td><code>MONGO_URI</code></td><td>-</td><td>MongoDB 连接字符串</td></tr>
+            <tr><td><code>ADMIN_SECRET</code></td><td>-</td><td>管理员密钥</td></tr>
+            <tr><td><code>SITE_SECRETS</code></td><td>{}</td><td>JWT 密钥 (JSON)</td></tr>
+            <tr><td><code>ENABLE_PUPPETEER</code></td><td>true</td><td>启用 Puppeteer</td></tr>
+        </table>
+
+        <h3>Docker</h3>
+        <pre><code>docker run -d -p 4000:4000 -v ./data:/app/data zoidberg-xgd/paranote</code></pre>
+    </div>
+
+</body>
+</html>

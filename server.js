@@ -26,6 +26,12 @@ try {
 // 检查 Puppeteer 是否启用 (默认开启)
 const ENABLE_PUPPETEER = process.env.ENABLE_PUPPETEER !== 'false';
 
+// 部署模式: full (完整前端+API), api (仅API), reader (API+阅读器)
+const DEPLOY_MODE = (process.env.DEPLOY_MODE || 'full').toLowerCase();
+// full   = 完整部署 (首页 + 阅读器 + 所有API)
+// api    = 仅核心API (评论CRUD，不含 /api/v1/fetch)
+// reader = API + 阅读器 (含 /api/v1/fetch，但无首页)
+
 // 延迟加载 Puppeteer 实例
 let puppeteerInstance = null;
 
@@ -478,6 +484,126 @@ const server = http.createServer(async (req, res) => {
       }
   }
 
+  // 新增：抓取 API - 返回 JSON 数据供前端渲染 (仅 full/reader 模式)
+  if (url.pathname === "/api/v1/fetch" && req.method === "GET") {
+    if (DEPLOY_MODE === 'api') {
+      return sendJson(res, 404, { error: "fetch_api_disabled", message: "Set DEPLOY_MODE=full or reader to enable" });
+    }
+    
+    const targetUrl = url.searchParams.get("url");
+    const mode = url.searchParams.get("mode") || "reader"; // reader | raw | telegraph
+    
+    if (!targetUrl) {
+      return sendJson(res, 400, { error: "missing_url" });
+    }
+
+    try {
+      const targetObj = new URL(targetUrl);
+      
+      // Telegra.ph 特殊处理
+      if (targetObj.hostname.includes("telegra.ph") && targetObj.pathname !== "/") {
+        const slug = targetObj.pathname.replace(/^\//, '');
+        const apiUrl = `https://api.telegra.ph/getPage/${slug}?return_content=true`;
+        const apiResp = await fetch(apiUrl);
+        const apiJson = await apiResp.json();
+
+        if (!apiJson.ok) {
+          return sendJson(res, 404, { error: "telegraph_not_found" });
+        }
+
+        const page = apiJson.result;
+        
+        function renderNode(node) {
+          if (typeof node === 'string') return node;
+          if (!node.tag) return '';
+          const children = (node.children || []).map(renderNode).join('');
+          const attrs = Object.entries(node.attrs || {})
+            .map(([k, v]) => {
+               if (k === 'src' && v.startsWith('/')) {
+                 return `${k}="https://telegra.ph${v}"`;
+               }
+               return `${k}="${v}"`;
+            })
+            .join(' ');
+          if (['img', 'br', 'hr'].includes(node.tag)) {
+            return `<${node.tag} ${attrs} />`;
+          }
+          return `<${node.tag} ${attrs}>${children}</${node.tag}>`;
+        }
+
+        const contentHtml = (page.content || []).map(renderNode).join('') || `<p>${page.description || ''}</p>`;
+        const workId = slug;
+        
+        return sendJson(res, 200, {
+          title: page.title,
+          content: contentHtml,
+          byline: page.author_name || '',
+          siteName: 'Telegra.ph',
+          sourceUrl: targetUrl,
+          workId,
+          siteId: 'telegraph-proxy',
+          chapterId: 'index',
+          mode: 'telegraph'
+        });
+      }
+
+      // 普通网页抓取
+      const htmlRaw = await fetchPageContent(targetUrl);
+      
+      if (mode === "raw") {
+        // 原样导入模式 - 返回处理后的 HTML
+        let html = htmlRaw;
+        if (!html.includes("<base")) {
+          html = html.replace("<head>", `<head><base href="${targetUrl}">`);
+        }
+        html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gim, "");
+        html = html.replace(/\sdata-(src|original)="([^"]*)"/gi, ' src="$2"');
+        
+        const workId = crypto.createHash('md5').update(targetObj.hostname).digest('hex');
+        const chapterId = crypto.createHash('md5').update(targetUrl).digest('hex');
+        
+        return sendJson(res, 200, {
+          title: '',
+          content: html,
+          byline: '',
+          siteName: targetObj.hostname,
+          sourceUrl: targetUrl,
+          workId,
+          siteId: 'imported',
+          chapterId,
+          mode: 'raw'
+        });
+      }
+      
+      // Reader 模式 - 使用 Readability 提取正文
+      const dom = new JSDOM(htmlRaw, { url: targetUrl });
+      const reader = new Readability(dom.window.document);
+      const article = reader.parse();
+
+      if (!article) {
+        return sendJson(res, 422, { error: "cannot_extract_content" });
+      }
+
+      const workId = "r_" + crypto.createHash('md5').update(targetUrl).digest('hex');
+      
+      return sendJson(res, 200, {
+        title: article.title || '',
+        content: article.content,
+        byline: article.byline || '',
+        siteName: targetObj.hostname,
+        sourceUrl: targetUrl,
+        workId,
+        siteId: 'paranote-reader',
+        chapterId: 'index',
+        mode: 'reader'
+      });
+
+    } catch (e) {
+      console.error("Fetch API Error:", e);
+      return sendJson(res, 500, { error: "fetch_failed", message: e.message });
+    }
+  }
+
   if (url.pathname === "/api/v1/comments" && req.method === "DELETE") {
     let body;
     try {
@@ -674,7 +800,31 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  if (url.pathname === "/read" && req.method === "GET") {
+  // 兼容旧路由：重定向到静态前端页面 (仅 full/reader 模式)
+  if (url.pathname === "/read" && req.method === "GET" && DEPLOY_MODE !== 'api') {
+    const targetUrl = url.searchParams.get("url");
+    if (!targetUrl) {
+      res.writeHead(302, { "Location": "/" });
+      return res.end();
+    }
+    res.writeHead(302, { "Location": `/public/reader.html?url=${encodeURIComponent(targetUrl)}&mode=reader` });
+    return res.end();
+  }
+
+  if (url.pathname === "/import" && req.method === "GET" && DEPLOY_MODE !== 'api') {
+    const targetUrl = url.searchParams.get("url");
+    if (!targetUrl) {
+      res.writeHead(302, { "Location": "/" });
+      return res.end();
+    }
+    res.writeHead(302, { "Location": `/public/reader.html?url=${encodeURIComponent(targetUrl)}&mode=raw` });
+    return res.end();
+  }
+
+  // ===== 以下为旧的服务端渲染路由，已被静态前端替代，保留代码供参考 =====
+  // 如需完全移除，可删除到 "// ===== 旧路由结束 =====" 之间的代码
+  
+  if (false && url.pathname === "/read-legacy" && req.method === "GET") {
     const targetUrl = url.searchParams.get("url");
     if (!targetUrl) {
       res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
@@ -833,7 +983,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  if (url.pathname === "/import" && req.method === "GET") {
+  if (false && url.pathname === "/import-legacy" && req.method === "GET") {
       const targetUrl = url.searchParams.get("url");
       if (!targetUrl) {
           res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
@@ -939,35 +1089,16 @@ const server = http.createServer(async (req, res) => {
       }
       return;
   }
+  // ===== 旧路由结束 =====
 
   if (req.method === "GET") {
-    if (url.pathname === "/") {
-      const filePath = path.join(__dirname, "public", "index.html");
-      try {
-        const content = await fs.readFile(filePath, "utf8");
-        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-        return res.end(content);
-      } catch (e) {
-        return sendJson(res, 404, { error: "index_not_found" });
-      }
-    }
-
-    if (url.pathname === "/example") {
-      const filePath = path.join(__dirname, "example", "index.html");
-      try {
-        const content = await fs.readFile(filePath, "utf8");
-        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-        return res.end(content);
-      } catch (e) {
-        return sendJson(res, 404, { error: "example_not_found" });
-      }
-    }
-
+    // 健康检查 (所有模式)
     if (url.pathname === "/health") {
       res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
       return res.end("ok");
     }
 
+    // embed.js (所有模式，评论嵌入脚本)
     if (url.pathname === "/public/embed.js" || url.pathname === "/embed.js") {
       const filePath = path.join(__dirname, "public", "embed.js");
       try {
@@ -983,6 +1114,7 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // paranote.min.js (所有模式)
     if (url.pathname === "/dist/paranote.min.js") {
       const filePath = path.join(__dirname, "dist", "paranote.min.js");
       try {
@@ -997,6 +1129,66 @@ const server = http.createServer(async (req, res) => {
         return res.end("Not found");
       }
     }
+
+    // 首页 (仅 full 模式)
+    if (url.pathname === "/" && DEPLOY_MODE === 'full') {
+      const filePath = path.join(__dirname, "public", "index.html");
+      try {
+        const content = await fs.readFile(filePath, "utf8");
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(content);
+      } catch (e) {
+        return sendJson(res, 404, { error: "index_not_found" });
+      }
+    }
+
+    // API 模式下的根路径返回 API 信息
+    if (url.pathname === "/" && DEPLOY_MODE === 'api') {
+      return sendJson(res, 200, {
+        service: "ParaNote API",
+        mode: "api",
+        endpoints: [
+          "GET  /api/v1/comments",
+          "POST /api/v1/comments",
+          "POST /api/v1/comments/like",
+          "DELETE /api/v1/comments",
+          "GET  /api/v1/export",
+          "POST /api/v1/import",
+          "GET  /health"
+        ]
+      });
+    }
+
+    // reader 模式下的根路径重定向到阅读器
+    if (url.pathname === "/" && DEPLOY_MODE === 'reader') {
+      res.writeHead(302, { "Location": "/public/reader.html" });
+      return res.end();
+    }
+
+    // 阅读器页面 (仅 full/reader 模式)
+    if (url.pathname === "/public/reader.html" && DEPLOY_MODE !== 'api') {
+      const filePath = path.join(__dirname, "public", "reader.html");
+      try {
+        const content = await fs.readFile(filePath, "utf8");
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(content);
+      } catch (e) {
+        res.writeHead(404);
+        return res.end("Not found");
+      }
+    }
+
+    // example 页面 (仅 full 模式)
+    if (url.pathname === "/example" && DEPLOY_MODE === 'full') {
+      const filePath = path.join(__dirname, "example", "index.html");
+      try {
+        const content = await fs.readFile(filePath, "utf8");
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        return res.end(content);
+      } catch (e) {
+        return sendJson(res, 404, { error: "example_not_found" });
+      }
+    }
   }
 
   res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
@@ -1007,9 +1199,16 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   // 启动服务前先初始化存储
   initStorage().then(() => {
       server.listen(PORT, () => {
+        const modeDesc = {
+          full: '完整部署 (首页 + 阅读器 + 所有API)',
+          api: '仅核心API (评论CRUD，无 /api/v1/fetch)',
+          reader: 'API + 阅读器 (含 /api/v1/fetch，无首页)'
+        };
         console.log(`ParaNote listening on http://localhost:${PORT}`);
         console.log(`- Storage: ${process.env.STORAGE_TYPE || 'file'}`);
         console.log(`- Puppeteer: ${ENABLE_PUPPETEER ? 'Enabled' : 'Disabled'}`);
+        console.log(`- Deploy mode: ${DEPLOY_MODE}`);
+        console.log(`  ${modeDesc[DEPLOY_MODE] || '未知模式'}`);
       });
   }).catch(err => {
       console.error("Failed to initialize storage:", err);
