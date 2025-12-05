@@ -57,7 +57,7 @@ describe('API Routes', () => {
         });
 
       expect(res.status).toBe(201);
-      expect(res.body.userName).toBe('匿名');
+      expect(res.body.userName).toMatch(/^访客-[a-f0-9]{6}$/);  // 现在生成访客身份
       expect(res.body.userId).toMatch(/^ip_/);
     });
 
