@@ -34,6 +34,13 @@ docker build -t paranote .
 docker run -d -p 4000:4000 -v $(pwd)/data:/app/data paranote
 ```
 
+**Podman (rootless)**
+```bash
+podman build -t paranote .
+# 使用 host 网络模式避免端口映射问题
+podman run -d --restart=always --network=host -v paranote_data:/app/data --name paranote paranote
+```
+
 **本地开发**
 ```bash
 npm install
@@ -231,6 +238,17 @@ docker run -d -p 4000:4000 -v $(pwd)/data:/app/data paranote
 
 # 仅 API 模式 (低内存 <100MB)
 docker run -d -p 4000:4000 -e DEPLOY_MODE=api -e ENABLE_PUPPETEER=false paranote
+```
+
+**使用 Podman (rootless)**
+```bash
+podman build -t paranote .
+
+# 推荐使用 host 网络模式 (避免 rootless 端口映射问题)
+podman run -d --restart=always --network=host -v paranote_data:/app/data --name paranote paranote
+
+# 开放防火墙端口
+sudo firewall-cmd --add-port=4000/tcp --permanent && sudo firewall-cmd --reload
 ```
 
 ## 🛠 技术细节
