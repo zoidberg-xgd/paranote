@@ -503,6 +503,21 @@
           }
         }
         
+        // 获取黑名单（管理员或作者可见）
+        let bannedUserIds = new Set();
+        if (isAdmin || isAuthor) {
+          try {
+            const headers = {};
+            if (token) headers["X-Paranote-Token"] = token;
+            const banRes = await apiRequest(apiBase + `/api/v1/ban?siteId=${encodeURIComponent(siteId)}`, { headers });
+            if (banRes.bannedUsers) {
+              bannedUserIds = new Set(banRes.bannedUsers.map(b => b.userId));
+            }
+          } catch (e) {
+            console.warn("ParaNote: Failed to load banlist", e);
+          }
+        }
+        
         // 更新头部评论数
         if (headerCountEl) {
           headerCountEl.textContent = arr.length > 0 ? arr.length + "条" : "";
@@ -576,8 +591,21 @@
           userInfo.style.cssText = "flex: 1; min-width: 0; display: flex; flex-direction: column;";
           
           const userName = document.createElement("span");
-          userName.style.cssText = "font-weight: 600; color: #333; font-size: 13px;";
-          userName.textContent = name;
+          userName.style.cssText = "font-weight: 600; color: #333; font-size: 13px; display: flex; align-items: center; gap: 6px;";
+          
+          // 用户名文本
+          const nameText = document.createElement("span");
+          nameText.textContent = name;
+          userName.appendChild(nameText);
+          
+          // 已拉黑标记（管理员/作者可见）
+          const isUserBanned = c.userId && bannedUserIds.has(c.userId);
+          if ((isAdmin || isAuthor) && isUserBanned) {
+            const bannedBadge = document.createElement("span");
+            bannedBadge.textContent = "已拉黑";
+            bannedBadge.style.cssText = "font-size: 10px; color: #fff; background: #bd1c2b; padding: 1px 6px; border-radius: 10px; font-weight: 500;";
+            userName.appendChild(bannedBadge);
+          }
           
           const meta = document.createElement("span");
           meta.style.cssText = "font-size: 11px; color: #999; margin-top: 2px;";
@@ -690,37 +718,83 @@
             };
             actionContainer.appendChild(delBtn);
             
-            // 拉黑按钮（管理员或作者可见，且不能拉黑自己）
+            // 拉黑/解除拉黑按钮（管理员或作者可见，且不能拉黑自己）
             if ((isAdmin || isAuthor) && c.userId && c.userId !== currentUserId) {
               const banBtn = document.createElement("button");
-              banBtn.innerHTML = "🚫";
-              banBtn.title = "拉黑此用户";
-              banBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#aaa; font-size:14px; transition:color 0.2s;";
-              banBtn.onmouseenter = () => banBtn.style.color = "#bd1c2b";
-              banBtn.onmouseleave = () => banBtn.style.color = "#aaa";
+              let isBanned = isUserBanned;
+              
+              // 更新按钮状态
+              function updateBanBtnState() {
+                if (isBanned) {
+                  banBtn.innerHTML = "✅";
+                  banBtn.title = "解除拉黑";
+                  banBtn.style.color = "#52c41a";
+                } else {
+                  banBtn.innerHTML = "🚫";
+                  banBtn.title = "拉黑此用户";
+                  banBtn.style.color = "#aaa";
+                }
+              }
+              
+              banBtn.style.cssText = "border:none; background:transparent; cursor:pointer; font-size:14px; transition:color 0.2s;";
+              updateBanBtnState();
+              
+              banBtn.onmouseenter = () => banBtn.style.opacity = "0.7";
+              banBtn.onmouseleave = () => banBtn.style.opacity = "1";
+              
               banBtn.onclick = async function(e) {
                 e.stopPropagation();
-                const reason = prompt(`确定拉黑用户 "${c.userName || c.userId}" 吗？\n请输入拉黑原因（可选）：`);
-                if (reason === null) return; // 用户取消
+                const headers = { "Content-Type": "application/json" };
+                if (window.PARANOTE_TOKEN) {
+                  headers["X-Paranote-Token"] = window.PARANOTE_TOKEN;
+                }
+                
                 try {
-                   const banData = { siteId, targetUserId: c.userId, reason: reason || "管理员拉黑" };
-                   const headers = { "Content-Type": "application/json" };
-                   if (window.PARANOTE_TOKEN) {
-                     headers["X-Paranote-Token"] = window.PARANOTE_TOKEN;
-                   }
-                   const result = await apiRequest(apiBase + "/api/v1/ban", {
-                     method: "POST",
-                     headers,
-                     body: JSON.stringify(banData)
-                   });
-                   if (result.success) {
-                       alert(`用户 "${c.userName || c.userId}" 已被拉黑`);
-                   } else {
-                       alert(result.error || "拉黑失败");
-                   }
+                  if (isBanned) {
+                    // 解除拉黑
+                    if (!confirm(`确定解除拉黑用户 "${c.userName || c.userId}" 吗？`)) return;
+                    const result = await apiRequest(apiBase + "/api/v1/ban", {
+                      method: "DELETE",
+                      headers,
+                      body: JSON.stringify({ siteId, targetUserId: c.userId })
+                    });
+                    if (result.success) {
+                      isBanned = false;
+                      bannedUserIds.delete(c.userId);
+                      updateBanBtnState();
+                      // 移除已拉黑标记
+                      const badge = userName.querySelector('span:last-child');
+                      if (badge && badge.textContent === '已拉黑') badge.remove();
+                      alert(`已解除拉黑 "${c.userName || c.userId}"`);
+                    } else {
+                      alert(result.error || "解除拉黑失败");
+                    }
+                  } else {
+                    // 拉黑
+                    const reason = prompt(`确定拉黑用户 "${c.userName || c.userId}" 吗？\n请输入拉黑原因（可选）：`);
+                    if (reason === null) return;
+                    const result = await apiRequest(apiBase + "/api/v1/ban", {
+                      method: "POST",
+                      headers,
+                      body: JSON.stringify({ siteId, targetUserId: c.userId, reason: reason || "管理员拉黑" })
+                    });
+                    if (result.success) {
+                      isBanned = true;
+                      bannedUserIds.add(c.userId);
+                      updateBanBtnState();
+                      // 添加已拉黑标记
+                      const bannedBadge = document.createElement("span");
+                      bannedBadge.textContent = "已拉黑";
+                      bannedBadge.style.cssText = "font-size: 10px; color: #fff; background: #bd1c2b; padding: 1px 6px; border-radius: 10px; font-weight: 500;";
+                      userName.appendChild(bannedBadge);
+                      alert(`用户 "${c.userName || c.userId}" 已被拉黑`);
+                    } else {
+                      alert(result.error || "拉黑失败");
+                    }
+                  }
                 } catch(e) { 
-                   console.error(e);
-                   alert("拉黑失败");
+                  console.error(e);
+                  alert(isBanned ? "解除拉黑失败" : "拉黑失败");
                 }
               };
               actionContainer.appendChild(banBtn);
