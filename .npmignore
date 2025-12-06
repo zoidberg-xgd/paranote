@@ -1,0 +1,36 @@
+# 开发文件
+.git/
+.gitignore
+.env
+.env.example
+.dockerignore
+
+# 测试
+tests/
+coverage/
+vitest.config.js
+
+# 开发工具配置
+eslint.config.js
+tsconfig.json
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# 数据目录
+data/
+puppeteer_data/
+
+# 示例
+example/
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Node
+node_modules/

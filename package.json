@@ -3,9 +3,38 @@
   "version": "0.1.0",
   "description": "ParaNote: Lightweight paragraph comments service for novel and article sites",
   "type": "module",
-  "main": "server.js",
+  "main": "index.js",
+  "bin": {
+    "paranote": "./bin/paranote.js"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./server": "./server.js",
+    "./config": "./config.js",
+    "./storage": "./storage.js",
+    "./utils": "./utils.js",
+    "./fetcher": "./fetcher.js"
+  },
+  "files": [
+    "index.js",
+    "server.js",
+    "config.js",
+    "storage.js",
+    "storage-file.js",
+    "storage-mongo.js",
+    "storage-interface.js",
+    "utils.js",
+    "fetcher.js",
+    "browser-forge.js",
+    "routes/",
+    "public/",
+    "dist/",
+    "bin/",
+    "README.md"
+  ],
   "scripts": {
-    "start": "node server.js",
+    "start": "node bin/paranote.js start",
+    "server": "node server.js",
     "start:api": "DEPLOY_MODE=api node server.js",
     "start:reader": "DEPLOY_MODE=reader node server.js",
     "build:embed": "esbuild public/embed.js --bundle --minify --format=iife --global-name=ParaNoteEmbed --outfile=dist/paranote.min.js",
@@ -18,9 +47,23 @@
     "comments",
     "annotation",
     "novel",
-    "paragraph"
+    "paragraph",
+    "reader",
+    "embed",
+    "hypothesis"
   ],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zoidberg-xgd/paranote.git"
+  },
+  "homepage": "https://github.com/zoidberg-xgd/paranote#readme",
+  "bugs": {
+    "url": "https://github.com/zoidberg-xgd/paranote/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "zoidberg-xgd",
   "license": "MIT",
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
