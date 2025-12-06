@@ -690,8 +690,8 @@
             };
             actionContainer.appendChild(delBtn);
             
-            // 拉黑按钮（仅管理员可见，且不能拉黑自己）
-            if (isAdmin && c.userId && c.userId !== currentUserId) {
+            // 拉黑按钮（管理员或作者可见，且不能拉黑自己）
+            if ((isAdmin || isAuthor) && c.userId && c.userId !== currentUserId) {
               const banBtn = document.createElement("button");
               banBtn.innerHTML = "🚫";
               banBtn.title = "拉黑此用户";
