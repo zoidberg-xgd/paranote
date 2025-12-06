@@ -178,14 +178,20 @@ SITE_SECRETS='{"my-site":"YOUR_SECRET"}'
 
 ### 环境变量
 
-支持通过 `.env` 文件配置（项目根目录）：
+支持通过 `.env` 文件配置：
 
 ```bash
-# .env 示例
-PORT=4000
-ADMIN_SECRET=your_strong_secret_key
-SITE_SECRETS={"my-site":"jwt-secret"}
+# 1. 复制示例配置文件
+cp .env.example .env
+
+# 2. 编辑配置（必须修改 ADMIN_SECRET）
+nano .env
+
+# 3. 生成强密钥（推荐）
+openssl rand -hex 32
 ```
+
+详细配置说明见 `.env.example` 文件。
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
