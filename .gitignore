@@ -3,6 +3,8 @@ data
 npm-debug.log*
 .DS_Store
 puppeteer_data
+puppeteer_data*
 h/
 coverage/
-puppeteer_data*
+.env
+.env.*

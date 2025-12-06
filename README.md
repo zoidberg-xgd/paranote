@@ -178,6 +178,15 @@ SITE_SECRETS='{"my-site":"YOUR_SECRET"}'
 
 ### 环境变量
 
+支持通过 `.env` 文件配置（项目根目录）：
+
+```bash
+# .env 示例
+PORT=4000
+ADMIN_SECRET=your_strong_secret_key
+SITE_SECRETS={"my-site":"jwt-secret"}
+```
+
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `PORT` | 4000 | 服务端口 |
