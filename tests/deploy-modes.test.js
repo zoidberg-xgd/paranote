@@ -15,7 +15,7 @@ describe('Deploy Mode: API', () => {
     process.env.DEPLOY_MODE = 'api';
     process.env.RATE_LIMIT = 'false';
     
-    const module = await import('../server-new.js');
+    const module = await import('../server.js');
     server = module.server;
   });
 
@@ -72,7 +72,7 @@ describe('Deploy Mode: Reader', () => {
     process.env.DEPLOY_MODE = 'reader';
     process.env.RATE_LIMIT = 'false';
     
-    const module = await import('../server-new.js');
+    const module = await import('../server.js');
     server = module.server;
   });
 
@@ -106,7 +106,7 @@ describe('Deploy Mode: Full', () => {
     process.env.DEPLOY_MODE = 'full';
     process.env.RATE_LIMIT = 'false';
     
-    const module = await import('../server-new.js');
+    const module = await import('../server.js');
     server = module.server;
   });
 

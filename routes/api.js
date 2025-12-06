@@ -21,6 +21,10 @@ import {
   deleteComment,
   exportAll,
   importAll,
+  banUser,
+  unbanUser,
+  isUserBanned,
+  listBannedUsers,
 } from "../storage.js";
 import { fetchContent } from "../fetcher.js";
 
@@ -103,6 +107,13 @@ export async function handleApiRoutes(req, res, url) {
 
       if (!finalUserName) finalUserName = `访客-${userId.substring(3, 9)}`;
 
+      // 检查用户是否被拉黑
+      const banned = await isUserBanned({ siteId, userId });
+      if (banned) {
+        sendJson(res, 403, { error: "user_banned", message: "您已被禁止评论" });
+        return true;
+      }
+
       const comment = await createComment({
         siteId,
         workId,
@@ -145,16 +156,20 @@ export async function handleApiRoutes(req, res, url) {
       return true;
     }
 
+    // 支持 admin secret 或 JWT 权限
+    const adminSecretHeader = req.headers["x-admin-secret"];
+    const isAdminBySecret = config.adminSecret && adminSecretHeader === config.adminSecret;
+
     const tokenHeader = req.headers["x-paranote-token"];
     const jwtPayload = verifyJwt(
       Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader,
       siteId
     );
 
-    const isAdmin = jwtPayload?.role === "admin" || jwtPayload?.isAdmin === true;
+    const isAdminByJwt = jwtPayload?.role === "admin" || jwtPayload?.isAdmin === true;
     const isAuthor = !!editToken;
 
-    if (!isAdmin && !isAuthor) {
+    if (!isAdminBySecret && !isAdminByJwt && !isAuthor) {
       sendJson(res, 403, { error: "permission_denied" });
       return true;
     }
@@ -303,6 +318,135 @@ export async function handleApiRoutes(req, res, url) {
       sendJson(res, 200, result);
     } catch (e) {
       console.error("importAll error:", e);
+      sendJson(res, 500, { error: "internal_error" });
+    }
+    return true;
+  }
+
+  // POST /api/v1/ban - 拉黑用户
+  if (path === "/api/v1/ban" && method === "POST") {
+    let body;
+    try {
+      body = await parseBody(req);
+    } catch (e) {
+      sendJson(res, 400, { error: e.message });
+      return true;
+    }
+
+    const { siteId, targetUserId, reason } = body || {};
+    if (!siteId || !targetUserId) {
+      sendJson(res, 400, { error: "missing_fields", message: "siteId and targetUserId required" });
+      return true;
+    }
+
+    // 权限验证：需要管理员或作者（支持 admin secret）
+    const adminSecretHeader = req.headers["x-admin-secret"];
+    const isAdminBySecret = config.adminSecret && adminSecretHeader === config.adminSecret;
+
+    const tokenHeader = req.headers["x-paranote-token"];
+    const jwtPayload = verifyJwt(
+      Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader,
+      siteId
+    );
+
+    const isAdminByJwt = jwtPayload?.role === "admin" || jwtPayload?.isAdmin === true;
+    const isAuthor = jwtPayload?.isAuthor === true;
+
+    if (!isAdminBySecret && !isAdminByJwt && !isAuthor) {
+      sendJson(res, 403, { error: "permission_denied", message: "需要管理员或作者权限" });
+      return true;
+    }
+
+    try {
+      const bannedBy = jwtPayload?.sub || jwtPayload?.userId || "admin";
+      const result = await banUser({ siteId, targetUserId, reason, bannedBy });
+      sendJson(res, 200, result);
+    } catch (e) {
+      console.error("banUser error:", e);
+      sendJson(res, 500, { error: "internal_error" });
+    }
+    return true;
+  }
+
+  // DELETE /api/v1/ban - 解除拉黑
+  if (path === "/api/v1/ban" && method === "DELETE") {
+    let body;
+    try {
+      body = await parseBody(req);
+    } catch (e) {
+      sendJson(res, 400, { error: e.message });
+      return true;
+    }
+
+    const { siteId, targetUserId } = body || {};
+    if (!siteId || !targetUserId) {
+      sendJson(res, 400, { error: "missing_fields", message: "siteId and targetUserId required" });
+      return true;
+    }
+
+    // 权限验证（支持 admin secret）
+    const adminSecretHeader = req.headers["x-admin-secret"];
+    const isAdminBySecret = config.adminSecret && adminSecretHeader === config.adminSecret;
+
+    const tokenHeader = req.headers["x-paranote-token"];
+    const jwtPayload = verifyJwt(
+      Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader,
+      siteId
+    );
+
+    const isAdminByJwt = jwtPayload?.role === "admin" || jwtPayload?.isAdmin === true;
+    const isAuthor = jwtPayload?.isAuthor === true;
+
+    if (!isAdminBySecret && !isAdminByJwt && !isAuthor) {
+      sendJson(res, 403, { error: "permission_denied", message: "需要管理员或作者权限" });
+      return true;
+    }
+
+    try {
+      const result = await unbanUser({ siteId, targetUserId });
+      if (result.success) {
+        sendJson(res, 200, result);
+      } else {
+        sendJson(res, 404, { error: "not_found" });
+      }
+    } catch (e) {
+      console.error("unbanUser error:", e);
+      sendJson(res, 500, { error: "internal_error" });
+    }
+    return true;
+  }
+
+  // GET /api/v1/ban - 获取黑名单列表
+  if (path === "/api/v1/ban" && method === "GET") {
+    const siteId = url.searchParams.get("siteId");
+    if (!siteId) {
+      sendJson(res, 400, { error: "missing_params", message: "siteId required" });
+      return true;
+    }
+
+    // 权限验证（支持 admin secret）
+    const adminSecretHeader = req.headers["x-admin-secret"];
+    const isAdminBySecret = config.adminSecret && adminSecretHeader === config.adminSecret;
+
+    const tokenHeader = req.headers["x-paranote-token"];
+    const jwtPayload = verifyJwt(
+      Array.isArray(tokenHeader) ? tokenHeader[0] : tokenHeader,
+      siteId
+    );
+
+    const isAdminByJwt = jwtPayload?.role === "admin" || jwtPayload?.isAdmin === true;
+    const isAuthor = jwtPayload?.isAuthor === true;
+
+    if (!isAdminBySecret && !isAdminByJwt && !isAuthor) {
+      sendJson(res, 403, { error: "permission_denied", message: "需要管理员或作者权限" });
+      return true;
+    }
+
+    try {
+      const list = await listBannedUsers({ siteId });
+      sendJson(res, 200, { bannedUsers: list });
+    } catch (e) {
+      console.error("listBannedUsers error:", e);
       sendJson(res, 500, { error: "internal_error" });
     }
     return true;

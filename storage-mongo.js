@@ -27,7 +27,18 @@ const commentSchema = new mongoose.Schema({
 // 复合索引加速查询
 commentSchema.index({ siteId: 1, workId: 1, chapterId: 1 });
 
+// 黑名单 Schema
+const banSchema = new mongoose.Schema({
+  siteId: { type: String, required: true, index: true },
+  userId: { type: String, required: true },
+  reason: String,
+  bannedBy: String,
+  bannedAt: { type: Date, default: Date.now }
+});
+banSchema.index({ siteId: 1, userId: 1 }, { unique: true });
+
 let CommentModel;
+let BanModel;
 
 export async function initMongo() {
   if (!process.env.MONGO_URI) {
@@ -38,6 +49,7 @@ export async function initMongo() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ Connected to MongoDB');
     CommentModel = mongoose.model('Comment', commentSchema);
+    BanModel = mongoose.model('Ban', banSchema);
   } catch (err) {
     console.error('❌ MongoDB connection error:', err);
     process.exit(1);
@@ -142,6 +154,43 @@ export function createMongoStorage() {
             await CommentModel.bulkWrite(ops);
         }
         return { success: true, count: ops.length };
+    },
+
+    // 黑名单功能
+    async banUser({ siteId, targetUserId, reason, bannedBy }) {
+      if (!BanModel) throw new Error('MongoDB not initialized');
+      await BanModel.findOneAndUpdate(
+        { siteId, userId: targetUserId },
+        { siteId, userId: targetUserId, reason: reason || '', bannedBy, bannedAt: new Date() },
+        { upsert: true }
+      );
+      return { success: true };
+    },
+
+    async unbanUser({ siteId, targetUserId }) {
+      if (!BanModel) throw new Error('MongoDB not initialized');
+      const result = await BanModel.deleteOne({ siteId, userId: targetUserId });
+      if (result.deletedCount > 0) {
+        return { success: true };
+      }
+      return { success: false, error: 'not_found' };
+    },
+
+    async isUserBanned({ siteId, userId }) {
+      if (!BanModel) throw new Error('MongoDB not initialized');
+      const ban = await BanModel.findOne({ siteId, userId });
+      return !!ban;
+    },
+
+    async listBannedUsers({ siteId }) {
+      if (!BanModel) throw new Error('MongoDB not initialized');
+      const bans = await BanModel.find({ siteId }).lean();
+      return bans.map(b => ({
+        userId: b.userId,
+        reason: b.reason,
+        bannedBy: b.bannedBy,
+        bannedAt: b.bannedAt ? b.bannedAt.toISOString() : undefined,
+      }));
     }
   };
 }

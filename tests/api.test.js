@@ -82,9 +82,9 @@ describe('ParaNote API Tests', () => {
         content: 'Trying to hack'
       });
 
-    // 根据目前 server.js 逻辑，verifyJwt 失败返回 null，代码会回退到 body.userName 或 "匿名"
+    // verifyJwt 失败返回 null，代码会回退到 IP 生成的访客身份
     expect(res.status).toBe(201);
-    expect(res.body.userName).toBe('匿名'); // 因为没传 body.userName，且 token 无效
+    expect(res.body.userName).toMatch(/^访客-/); // 自动生成访客名称
     expect(res.body.userId).toMatch(/^ip_/);
   });
 

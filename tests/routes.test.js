@@ -15,7 +15,7 @@ process.env.DEPLOY_MODE = 'full';
 process.env.RATE_LIMIT = 'false'; // Disable rate limit for tests
 
 // 动态导入 server
-const { server } = await import('../server-new.js');
+const { server } = await import('../server.js');
 
 describe('API Routes', () => {
   const SITE_ID = 'test-site';

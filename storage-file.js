@@ -8,6 +8,22 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, 'data');
+const BANLIST_FILE = path.join(DATA_DIR, '_banlists.json');
+
+// 黑名单存储辅助函数
+async function readBanlists() {
+  try {
+    const txt = await fs.readFile(BANLIST_FILE, "utf8");
+    return JSON.parse(txt);
+  } catch {
+    return {};
+  }
+}
+
+async function writeBanlists(data) {
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(BANLIST_FILE, JSON.stringify(data, null, 2), "utf8");
+}
 
 function getFilePath(siteId, workId, chapterId) {
   const safeName = `${encodeURIComponent(siteId)}__${encodeURIComponent(
@@ -186,6 +202,43 @@ export function createFileStorage() {
           count += list.length;
       }
       return { success: true, count };
+    },
+
+    // 黑名单功能
+    async banUser({ siteId, targetUserId, reason, bannedBy }) {
+      const banlists = await readBanlists();
+      if (!banlists[siteId]) banlists[siteId] = {};
+      banlists[siteId][targetUserId] = {
+        reason: reason || '',
+        bannedBy,
+        bannedAt: new Date().toISOString(),
+      };
+      await writeBanlists(banlists);
+      return { success: true };
+    },
+
+    async unbanUser({ siteId, targetUserId }) {
+      const banlists = await readBanlists();
+      if (banlists[siteId] && banlists[siteId][targetUserId]) {
+        delete banlists[siteId][targetUserId];
+        await writeBanlists(banlists);
+        return { success: true };
+      }
+      return { success: false, error: 'not_found' };
+    },
+
+    async isUserBanned({ siteId, userId }) {
+      const banlists = await readBanlists();
+      return !!(banlists[siteId] && banlists[siteId][userId]);
+    },
+
+    async listBannedUsers({ siteId }) {
+      const banlists = await readBanlists();
+      const siteBans = banlists[siteId] || {};
+      return Object.entries(siteBans).map(([userId, info]) => ({
+        userId,
+        ...info,
+      }));
     }
   };
 }

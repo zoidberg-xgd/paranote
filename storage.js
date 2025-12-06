@@ -49,3 +49,20 @@ export async function exportAll() {
 export async function importAll(...args) {
   return getImpl().importAll(...args);
 }
+
+// 黑名单功能
+export async function banUser(...args) {
+  return getImpl().banUser(...args);
+}
+
+export async function unbanUser(...args) {
+  return getImpl().unbanUser(...args);
+}
+
+export async function isUserBanned(...args) {
+  return getImpl().isUserBanned(...args);
+}
+
+export async function listBannedUsers(...args) {
+  return getImpl().listBannedUsers(...args);
+}

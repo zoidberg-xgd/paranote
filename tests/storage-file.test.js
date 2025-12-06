@@ -52,14 +52,16 @@ describe('File Storage', () => {
     });
 
     it('should sort by likes then by time', async () => {
-      const c1 = await storage.createComment({ ...testData, paraIndex: 0, content: 'First', userName: 'U1', userId: 'u1' });
-      const c2 = await storage.createComment({ ...testData, paraIndex: 0, content: 'Second', userName: 'U2', userId: 'u2' });
+      // 使用唯一的测试数据避免并行测试干扰
+      const sortTestData = { siteId: 'sort-test-' + Date.now(), workId: 'sort-work', chapterId: 'sort-ch' };
+      const c1 = await storage.createComment({ ...sortTestData, paraIndex: 0, content: 'First', userName: 'U1', userId: 'u1' });
+      const c2 = await storage.createComment({ ...sortTestData, paraIndex: 0, content: 'Second', userName: 'U2', userId: 'u2' });
       
       // 给第二条评论点赞
-      await storage.likeComment({ ...testData, commentId: c2.id, userId: 'voter1' });
-      await storage.likeComment({ ...testData, commentId: c2.id, userId: 'voter2' });
+      await storage.likeComment({ ...sortTestData, commentId: c2.id, userId: 'voter1' });
+      await storage.likeComment({ ...sortTestData, commentId: c2.id, userId: 'voter2' });
 
-      const result = await storage.listComments(testData);
+      const result = await storage.listComments(sortTestData);
       // 验证有评论
       expect(result['0']).toBeDefined();
       expect(result['0'].length).toBeGreaterThan(0);

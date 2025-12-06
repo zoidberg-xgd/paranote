@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ParaNote 管理后台</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 1.5rem; font-weight: 600; }
+    
+    /* Login Form */
+    .login-card {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 400px;
+      margin: 100px auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .login-card h2 { margin-bottom: 20px; text-align: center; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 500; }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .form-group input:focus { outline: none; border-color: #667eea; }
+    
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      width: 100%;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #ddd;
+      color: #666;
+    }
+    .btn-outline:hover { background: #f5f5f5; }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: white;
+      padding: 8px;
+      border-radius: 12px;
+    }
+    .tab {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: 500;
+      color: #666;
+      transition: all 0.2s;
+    }
+    .tab.active { background: #667eea; color: white; }
+    .tab:hover:not(.active) { background: #f0f0f0; }
+    
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eee;
+    }
+    .card-title { font-weight: 600; font-size: 1.1rem; }
+    
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-value { font-size: 2rem; font-weight: 700; color: #667eea; }
+    .stat-label { color: #666; font-size: 0.9rem; margin-top: 4px; }
+    
+    /* Table */
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { font-weight: 600; color: #666; font-size: 0.85rem; text-transform: uppercase; }
+    tr:hover { background: #f9f9f9; }
+    
+    /* Comment Item */
+    .comment-item {
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+    }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      color: #666;
+    }
+    .comment-user { font-weight: 600; color: #333; }
+    .comment-content { color: #333; }
+    .comment-actions { margin-top: 8px; display: flex; gap: 8px; }
+    
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .badge-info { background: #e3f2fd; color: #1976d2; }
+    .badge-warning { background: #fff3e0; color: #f57c00; }
+    .badge-danger { background: #ffebee; color: #d32f2f; }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    /* Hidden */
+    .hidden { display: none !important; }
+    
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .pagination button {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .pagination button:hover { background: #f5f5f5; }
+    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+    }
+    .modal h3 { margin-bottom: 16px; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+    
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-bar input, .filter-bar select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Login View -->
+    <div id="loginView">
+      <div class="login-card">
+        <h2>🔐 管理后台</h2>
+        <div class="form-group">
+          <label>管理员密钥</label>
+          <input type="password" id="adminSecret" placeholder="输入 ADMIN_SECRET">
+        </div>
+        <button class="btn btn-primary" onclick="login()">登录</button>
+        <p style="margin-top: 16px; font-size: 0.85rem; color: #666; text-align: center;">
+          使用环境变量 ADMIN_SECRET 的值登录
+        </p>
+      </div>
+    </div>
+
+    <!-- Admin View -->
+    <div id="adminView" class="hidden">
+      <header>
+        <h1>📊 ParaNote 管理后台</h1>
+        <button class="btn btn-outline" onclick="logout()">退出登录</button>
+      </header>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-value" id="statComments">-</div>
+          <div class="stat-label">总评论数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statUsers">-</div>
+          <div class="stat-label">用户数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statSites">-</div>
+          <div class="stat-label">站点数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statBanned">-</div>
+          <div class="stat-label">黑名单</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="comments">评论管理</button>
+        <button class="tab" data-tab="articles">文章统计</button>
+        <button class="tab" data-tab="banlist">黑名单</button>
+        <button class="tab" data-tab="export">数据导出</button>
+      </div>
+
+      <!-- Comments Tab -->
+      <div id="tab-comments" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">最近评论</span>
+            <button class="btn btn-sm btn-outline" onclick="loadComments()">刷新</button>
+          </div>
+          <div class="filter-bar">
+            <input type="text" id="filterSite" placeholder="筛选站点 ID">
+            <input type="text" id="filterUser" placeholder="筛选用户">
+            <button class="btn btn-sm btn-outline" onclick="applyFilter()">筛选</button>
+          </div>
+          <div id="commentsList" class="loading">加载中...</div>
+        </div>
+      </div>
+
+      <!-- Articles Tab -->
+      <div id="tab-articles" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">文章统计</span>
+          </div>
+          <p style="margin-bottom: 16px; color: #666;">按文章分组查看评论数量，点击可跳转到对应页面。</p>
+          <div id="articlesList" class="loading">加载中...</div>
+        </div>
+      </div>
+
+      <!-- Banlist Tab -->
+      <div id="tab-banlist" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">黑名单管理</span>
+            <button class="btn btn-sm btn-primary" onclick="showBanModal()">+ 添加</button>
+          </div>
+          <div id="banlistContent" class="loading">加载中...</div>
+        </div>
+      </div>
+
+      <!-- Export Tab -->
+      <div id="tab-export" class="tab-content hidden">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">数据导出</span>
+          </div>
+          <p style="margin-bottom: 16px; color: #666;">导出所有评论数据为 JSON 格式，可用于备份或迁移。</p>
+          <button class="btn btn-primary" onclick="exportData()">📥 导出数据</button>
+          <hr style="margin: 24px 0; border: none; border-top: 1px solid #eee;">
+          <div class="card-header" style="border: none; padding: 0;">
+            <span class="card-title">数据导入</span>
+          </div>
+          <p style="margin-bottom: 16px; color: #666;">从 JSON 文件导入评论数据。</p>
+          <input type="file" id="importFile" accept=".json" style="margin-bottom: 12px;">
+          <button class="btn btn-outline" onclick="importData()">📤 导入数据</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ban Modal -->
+    <div id="banModal" class="modal-overlay hidden">
+      <div class="modal">
+        <h3>拉黑用户</h3>
+        <div class="form-group">
+          <label>站点 ID</label>
+          <input type="text" id="banSiteId" placeholder="default-site">
+        </div>
+        <div class="form-group">
+          <label>用户 ID</label>
+          <input type="text" id="banUserId" placeholder="ip_xxx 或用户ID">
+        </div>
+        <div class="form-group">
+          <label>原因（可选）</label>
+          <input type="text" id="banReason" placeholder="垃圾评论">
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="closeBanModal()">取消</button>
+          <button class="btn btn-danger" onclick="confirmBan()">确认拉黑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let adminSecret = '';
+    let allComments = [];
+    let currentPage = 1;
+    const pageSize = 20;
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
+        
+        if (tab.dataset.tab === 'banlist') loadBanlist();
+        if (tab.dataset.tab === 'articles') loadArticles();
+      });
+    });
+
+    // Login
+    function login() {
+      adminSecret = document.getElementById('adminSecret').value;
+      if (!adminSecret) return alert('请输入管理员密钥');
+      
+      // Verify by trying to export
+      fetch('/api/v1/export', {
+        headers: { 'x-admin-secret': adminSecret }
+      }).then(r => {
+        if (r.ok) {
+          localStorage.setItem('adminSecret', adminSecret);
+          showAdminView();
+        } else {
+          alert('密钥错误');
+        }
+      }).catch(() => alert('连接失败'));
+    }
+
+    function logout() {
+      localStorage.removeItem('adminSecret');
+      adminSecret = '';
+      document.getElementById('loginView').classList.remove('hidden');
+      document.getElementById('adminView').classList.add('hidden');
+    }
+
+    function showAdminView() {
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('adminView').classList.remove('hidden');
+      loadStats();
+      loadComments();
+    }
+
+    // Check saved session
+    const saved = localStorage.getItem('adminSecret');
+    if (saved) {
+      adminSecret = saved;
+      showAdminView();
+    }
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/v1/export', {
+          headers: { 'x-admin-secret': adminSecret }
+        });
+        if (!res.ok) throw new Error('Failed');
+        allComments = await res.json();
+        
+        const users = new Set(allComments.map(c => c.userId));
+        const sites = new Set(allComments.map(c => c.siteId));
+        
+        document.getElementById('statComments').textContent = allComments.length;
+        document.getElementById('statUsers').textContent = users.size;
+        document.getElementById('statSites').textContent = sites.size;
+        
+        // Load banned count for first site
+        const firstSite = sites.values().next().value || 'default-site';
+        loadBannedCount(firstSite);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadBannedCount(siteId) {
+      try {
+        const res = await fetch(`/api/v1/ban?siteId=${encodeURIComponent(siteId)}`, {
+          headers: { 'x-admin-secret': adminSecret }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('statBanned').textContent = data.bannedUsers?.length || 0;
+        } else {
+          document.getElementById('statBanned').textContent = '-';
+        }
+      } catch {
+        document.getElementById('statBanned').textContent = '-';
+      }
+    }
+
+    // Load comments
+    function loadComments() {
+      const container = document.getElementById('commentsList');
+      if (allComments.length === 0) {
+        container.innerHTML = '<div class="empty-state">暂无评论</div>';
+        return;
+      }
+
+      // Sort by time desc
+      const sorted = [...allComments].sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      const filterSite = document.getElementById('filterSite').value.toLowerCase();
+      const filterUser = document.getElementById('filterUser').value.toLowerCase();
+      
+      const filtered = sorted.filter(c => {
+        if (filterSite && !c.siteId.toLowerCase().includes(filterSite)) return false;
+        if (filterUser && !c.userName?.toLowerCase().includes(filterUser) && !c.userId?.toLowerCase().includes(filterUser)) return false;
+        // 文章筛选
+        if (currentArticleFilter) {
+          if (c.workId !== currentArticleFilter.workId || c.chapterId !== currentArticleFilter.chapterId) return false;
+        }
+        return true;
+      });
+
+      const start = (currentPage - 1) * pageSize;
+      const paged = filtered.slice(start, start + pageSize);
+      const totalPages = Math.ceil(filtered.length / pageSize);
+
+      let html = '';
+      
+      // 显示文章筛选状态
+      if (currentArticleFilter) {
+        html += `
+          <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📄 筛选文章: <code>${escapeHtml(currentArticleFilter.workId.substring(0, 20))}</code></span>
+            <button class="btn btn-sm btn-outline" onclick="clearArticleFilter()">清除筛选</button>
+          </div>
+        `;
+      }
+      
+      for (const c of paged) {
+        const time = new Date(c.createdAt).toLocaleString('zh-CN');
+        html += `
+          <div class="comment-item">
+            <div class="comment-meta">
+              <span class="comment-user">${escapeHtml(c.userName || '匿名')}</span>
+              <span class="badge badge-info">${escapeHtml(c.siteId)}</span>
+              <span>${time}</span>
+              <span>👍 ${c.likes || 0}</span>
+            </div>
+            <div class="comment-content">${escapeHtml(c.content)}</div>
+            <div class="comment-actions">
+              <button class="btn btn-sm btn-outline" onclick="copyUserId('${c.userId}')">复制用户ID</button>
+              <button class="btn btn-sm btn-outline" onclick="banUserFromComment('${c.siteId}', '${c.userId}')">拉黑</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteComment('${c.siteId}', '${c.workId}', '${c.chapterId}', '${c.id}')">删除</button>
+            </div>
+          </div>
+        `;
+      }
+
+      html += `
+        <div class="pagination">
+          <button ${currentPage <= 1 ? 'disabled' : ''} onclick="changePage(-1)">上一页</button>
+          <span style="padding: 8px;">${currentPage} / ${totalPages || 1}</span>
+          <button ${currentPage >= totalPages ? 'disabled' : ''} onclick="changePage(1)">下一页</button>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function changePage(delta) {
+      currentPage += delta;
+      loadComments();
+    }
+
+    function applyFilter() {
+      currentPage = 1;
+      loadComments();
+    }
+
+    function copyUserId(userId) {
+      navigator.clipboard.writeText(userId);
+      alert('已复制: ' + userId);
+    }
+
+    async function deleteComment(siteId, workId, chapterId, commentId) {
+      if (!confirm('确定删除这条评论？')) return;
+      
+      try {
+        const res = await fetch('/api/v1/comments', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-secret': adminSecret
+          },
+          body: JSON.stringify({ siteId, workId, chapterId, commentId })
+        });
+        
+        if (res.ok) {
+          // 从本地数组移除
+          allComments = allComments.filter(c => c.id !== commentId);
+          document.getElementById('statComments').textContent = allComments.length;
+          loadComments();
+        } else {
+          const err = await res.json();
+          alert('删除失败: ' + (err.error || '未知错误'));
+        }
+      } catch (e) {
+        alert('删除失败: ' + e.message);
+      }
+    }
+
+    // Articles
+    function loadArticles() {
+      const container = document.getElementById('articlesList');
+      
+      // 按 workId + chapterId 分组
+      const groups = {};
+      for (const c of allComments) {
+        const key = `${c.siteId}||${c.workId}||${c.chapterId}`;
+        if (!groups[key]) {
+          groups[key] = {
+            siteId: c.siteId,
+            workId: c.workId,
+            chapterId: c.chapterId,
+            count: 0,
+            lastComment: c.createdAt
+          };
+        }
+        groups[key].count++;
+        if (new Date(c.createdAt) > new Date(groups[key].lastComment)) {
+          groups[key].lastComment = c.createdAt;
+        }
+      }
+      
+      const articles = Object.values(groups).sort((a, b) => 
+        new Date(b.lastComment) - new Date(a.lastComment)
+      );
+      
+      if (articles.length === 0) {
+        container.innerHTML = '<div class="empty-state">暂无文章数据</div>';
+        return;
+      }
+      
+      let html = '<div class="table-wrapper"><table><thead><tr><th>站点</th><th>文章标识</th><th>评论数</th><th>最后评论</th><th>操作</th></tr></thead><tbody>';
+      
+      for (const a of articles) {
+        const time = new Date(a.lastComment).toLocaleString('zh-CN');
+        // 判断是否是阅读器模式的文章 (workId 以 r_ 开头)
+        const isReader = a.workId.startsWith('r_');
+        const isImported = a.siteId === 'imported';
+        
+        let viewBtn = '';
+        if (a.siteId === 'paranote-reader' || isReader) {
+          // 阅读器模式无法直接跳转（URL 已被 hash），显示提示
+          viewBtn = `<span class="badge badge-info">阅读器模式</span>`;
+        } else if (isImported) {
+          viewBtn = `<span class="badge badge-warning">导入模式</span>`;
+        } else {
+          // 嵌入模式，显示 workId 作为参考
+          viewBtn = `<button class="btn btn-sm btn-outline" onclick="filterByArticle('${escapeHtml(a.workId)}', '${escapeHtml(a.chapterId)}')">查看评论</button>`;
+        }
+        
+        html += `
+          <tr>
+            <td><span class="badge badge-info">${escapeHtml(a.siteId)}</span></td>
+            <td>
+              <code style="font-size: 0.8rem;">${escapeHtml(a.workId.substring(0, 20))}${a.workId.length > 20 ? '...' : ''}</code>
+              ${a.chapterId !== 'index' && a.chapterId !== a.workId ? `<br><small style="color: #999;">章节: ${escapeHtml(a.chapterId.substring(0, 15))}</small>` : ''}
+            </td>
+            <td><strong>${a.count}</strong></td>
+            <td>${time}</td>
+            <td>${viewBtn}</td>
+          </tr>
+        `;
+      }
+      
+      html += '</tbody></table></div>';
+      container.innerHTML = html;
+    }
+    
+    function filterByArticle(workId, chapterId) {
+      // 切换到评论 Tab 并筛选
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      document.querySelector('[data-tab="comments"]').classList.add('active');
+      document.getElementById('tab-comments').classList.remove('hidden');
+      
+      // 设置筛选条件并刷新
+      currentArticleFilter = { workId, chapterId };
+      currentPage = 1;
+      loadComments();
+    }
+    
+    let currentArticleFilter = null;
+    
+    function clearArticleFilter() {
+      currentArticleFilter = null;
+      currentPage = 1;
+      loadComments();
+    }
+    
+    async function banUserFromComment(siteId, userId) {
+      const reason = prompt('拉黑原因（可选）:');
+      if (reason === null) return; // 用户取消
+      
+      try {
+        const res = await fetch('/api/v1/ban', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-secret': adminSecret
+          },
+          body: JSON.stringify({ siteId, targetUserId: userId, reason })
+        });
+        
+        if (res.ok) {
+          alert('拉黑成功');
+          loadBannedCount(siteId);
+        } else {
+          const err = await res.json();
+          alert('拉黑失败: ' + (err.error || '未知错误'));
+        }
+      } catch (e) {
+        alert('拉黑失败: ' + e.message);
+      }
+    }
+
+    // Banlist
+    let currentBanSite = 'default-site';
+    
+    async function loadBanlist() {
+      const container = document.getElementById('banlistContent');
+      
+      // 获取所有站点
+      const sites = [...new Set(allComments.map(c => c.siteId))];
+      if (sites.length === 0) sites.push('default-site');
+      currentBanSite = sites[0];
+      
+      let siteOptions = sites.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+      
+      container.innerHTML = `
+        <div class="filter-bar">
+          <select id="banlistSiteSelect" onchange="currentBanSite=this.value;refreshBanlist()">
+            ${siteOptions}
+          </select>
+          <button class="btn btn-sm btn-outline" onclick="refreshBanlist()">刷新</button>
+        </div>
+        <div id="banlistTable" class="loading">加载中...</div>
+      `;
+      
+      refreshBanlist();
+    }
+    
+    async function refreshBanlist() {
+      const container = document.getElementById('banlistTable');
+      try {
+        const res = await fetch(`/api/v1/ban?siteId=${encodeURIComponent(currentBanSite)}`, {
+          headers: { 'x-admin-secret': adminSecret }
+        });
+        
+        if (!res.ok) throw new Error('Failed to load');
+        const data = await res.json();
+        const list = data.bannedUsers || [];
+        
+        if (list.length === 0) {
+          container.innerHTML = '<div class="empty-state">暂无黑名单用户</div>';
+          return;
+        }
+        
+        let html = '<div class="table-wrapper"><table><thead><tr><th>用户 ID</th><th>原因</th><th>拉黑时间</th><th>操作</th></tr></thead><tbody>';
+        for (const b of list) {
+          const time = b.bannedAt ? new Date(b.bannedAt).toLocaleString('zh-CN') : '-';
+          html += `
+            <tr>
+              <td><code>${escapeHtml(b.userId)}</code></td>
+              <td>${escapeHtml(b.reason || '-')}</td>
+              <td>${time}</td>
+              <td><button class="btn btn-sm btn-outline" onclick="unbanUser('${escapeHtml(b.userId)}')">解除</button></td>
+            </tr>
+          `;
+        }
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+      } catch (e) {
+        container.innerHTML = `<div class="empty-state">加载失败: ${e.message}</div>`;
+      }
+    }
+    
+    async function unbanUser(userId) {
+      if (!confirm(`确定解除拉黑 ${userId}？`)) return;
+      
+      try {
+        const res = await fetch('/api/v1/ban', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-secret': adminSecret
+          },
+          body: JSON.stringify({ siteId: currentBanSite, targetUserId: userId })
+        });
+        
+        if (res.ok) {
+          refreshBanlist();
+          loadBannedCount(currentBanSite);
+        } else {
+          alert('解除失败');
+        }
+      } catch (e) {
+        alert('解除失败: ' + e.message);
+      }
+    }
+
+    function showBanModal() {
+      document.getElementById('banModal').classList.remove('hidden');
+    }
+
+    function closeBanModal() {
+      document.getElementById('banModal').classList.add('hidden');
+    }
+
+    async function confirmBan() {
+      const siteId = document.getElementById('banSiteId').value || 'default-site';
+      const targetUserId = document.getElementById('banUserId').value;
+      const reason = document.getElementById('banReason').value;
+      
+      if (!targetUserId) {
+        alert('请输入用户 ID');
+        return;
+      }
+      
+      try {
+        const res = await fetch('/api/v1/ban', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-secret': adminSecret
+          },
+          body: JSON.stringify({ siteId, targetUserId, reason })
+        });
+        
+        if (res.ok) {
+          closeBanModal();
+          document.getElementById('banSiteId').value = '';
+          document.getElementById('banUserId').value = '';
+          document.getElementById('banReason').value = '';
+          refreshBanlist();
+          loadBannedCount(siteId);
+          alert('拉黑成功');
+        } else {
+          const err = await res.json();
+          alert('拉黑失败: ' + (err.error || '未知错误'));
+        }
+      } catch (e) {
+        alert('拉黑失败: ' + e.message);
+      }
+    }
+
+    // Export
+    async function exportData() {
+      try {
+        const res = await fetch('/api/v1/export', {
+          headers: { 'x-admin-secret': adminSecret }
+        });
+        if (!res.ok) throw new Error('Export failed');
+        const data = await res.json();
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `paranote-backup-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        alert('导出失败: ' + e.message);
+      }
+    }
+
+    async function importData() {
+      const file = document.getElementById('importFile').files[0];
+      if (!file) return alert('请选择文件');
+      
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        const res = await fetch('/api/v1/import', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-secret': adminSecret
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (!res.ok) throw new Error('Import failed');
+        const result = await res.json();
+        alert(`导入成功: ${result.count} 条评论`);
+        loadStats();
+      } catch (e) {
+        alert('导入失败: ' + e.message);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+  </script>
+</body>
+</html>

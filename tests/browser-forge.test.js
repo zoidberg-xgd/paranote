@@ -55,7 +55,7 @@ describe('BrowserForge', () => {
       const result = generateFingerprint();
       
       expect(['chrome', 'firefox', 'safari', 'edge']).toContain(result.fingerprint.browser);
-      expect(['windows', 'macos', 'linux']).toContain(result.fingerprint.os);
+      expect(['windows', 'macos', 'linux', 'ios', 'android']).toContain(result.fingerprint.os);
     });
   });
 
