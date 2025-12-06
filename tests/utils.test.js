@@ -117,7 +117,7 @@ describe('Comment Input Validation', () => {
       content: '   ',
     });
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain('invalid_content');
+    expect(result.errors).toContain('empty_content');
   });
 
   it('should collect multiple errors', () => {

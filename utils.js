@@ -152,27 +152,70 @@ export function sanitizeString(str, maxLength = 10000) {
   return str.slice(0, maxLength).trim();
 }
 
+// ID 格式验证：只允许安全字符，防止路径遍历
+const SAFE_ID_PATTERN = /^[a-zA-Z0-9_\-\.]+$/;
+const MAX_ID_LENGTH = 200;
+const MAX_CONTENT_LENGTH = 10000;
+const MAX_PARA_INDEX = 100000;
+
+export function isValidId(id) {
+  if (typeof id !== "string") return false;
+  if (id.length === 0 || id.length > MAX_ID_LENGTH) return false;
+  if (!SAFE_ID_PATTERN.test(id)) return false;
+  // 防止路径遍历
+  if (id.includes("..") || id.includes("/") || id.includes("\\")) return false;
+  return true;
+}
+
 export function validateCommentInput(body) {
   const errors = [];
   
-  if (!body) {
+  if (!body || typeof body !== "object") {
     return { valid: false, errors: ["empty_body"] };
   }
   
-  if (!body.siteId || typeof body.siteId !== "string") {
+  // 验证 ID 格式（防止路径遍历和注入）
+  if (!isValidId(body.siteId)) {
     errors.push("invalid_siteId");
   }
-  if (!body.workId || typeof body.workId !== "string") {
+  if (!isValidId(body.workId)) {
     errors.push("invalid_workId");
   }
-  if (!body.chapterId || typeof body.chapterId !== "string") {
+  if (!isValidId(body.chapterId)) {
     errors.push("invalid_chapterId");
   }
-  if (typeof body.paraIndex !== "number" || body.paraIndex < 0) {
+  
+  // 验证 paraIndex 范围
+  if (typeof body.paraIndex !== "number" || 
+      !Number.isInteger(body.paraIndex) ||
+      body.paraIndex < 0 || 
+      body.paraIndex > MAX_PARA_INDEX) {
     errors.push("invalid_paraIndex");
   }
-  if (!body.content || typeof body.content !== "string" || !body.content.trim()) {
+  
+  // 验证内容长度
+  if (!body.content || typeof body.content !== "string") {
     errors.push("invalid_content");
+  } else {
+    const trimmed = body.content.trim();
+    if (trimmed.length === 0) {
+      errors.push("empty_content");
+    } else if (trimmed.length > MAX_CONTENT_LENGTH) {
+      errors.push("content_too_long");
+    }
+  }
+  
+  // 验证可选字段
+  if (body.parentId !== undefined && body.parentId !== null) {
+    if (typeof body.parentId !== "string" || body.parentId.length > 100) {
+      errors.push("invalid_parentId");
+    }
+  }
+  
+  if (body.userName !== undefined && body.userName !== null) {
+    if (typeof body.userName !== "string" || body.userName.length > 100) {
+      errors.push("invalid_userName");
+    }
   }
   
   return {
@@ -184,9 +227,25 @@ export function validateCommentInput(body) {
 // ==================== 速率限制 ====================
 
 const rateLimitStore = new Map();
+const MAX_RATE_LIMIT_ENTRIES = 10000; // 防止内存泄漏
 
 export function checkRateLimit(ip) {
   if (!config.rateLimit.enabled) return true;
+  
+  // 防止 IP 欺骗攻击导致内存泄漏
+  if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
+    // 清理最旧的一半记录
+    const entries = Array.from(rateLimitStore.entries());
+    entries.sort((a, b) => {
+      const lastA = a[1].requests[a[1].requests.length - 1] || 0;
+      const lastB = b[1].requests[b[1].requests.length - 1] || 0;
+      return lastA - lastB;
+    });
+    const toDelete = entries.slice(0, Math.floor(entries.length / 2));
+    for (const [key] of toDelete) {
+      rateLimitStore.delete(key);
+    }
+  }
   
   const now = Date.now();
   const windowStart = now - config.rateLimit.windowMs;
@@ -217,7 +276,7 @@ setInterval(() => {
       rateLimitStore.delete(ip);
     }
   }
-}, 60000);
+}, 60000).unref(); // unref 防止阻止进程退出
 
 // ==================== 哈希工具 ====================
 

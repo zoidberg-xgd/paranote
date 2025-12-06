@@ -13,7 +13,19 @@ import {
   validateCommentInput,
   checkRateLimit,
   isValidUrl,
+  isValidId,
 } from "../utils.js";
+
+// 时间安全的字符串比较，防止时序攻击
+function safeCompare(a, b) {
+  if (!a || !b || typeof a !== "string" || typeof b !== "string") return false;
+  if (a.length !== b.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  } catch {
+    return false;
+  }
+}
 import {
   listComments,
   createComment,
@@ -51,6 +63,12 @@ export async function handleApiRoutes(req, res, url) {
 
     if (!siteId || !workId || !chapterId) {
       sendJson(res, 400, { error: "missing_params", message: "siteId, workId, chapterId required" });
+      return true;
+    }
+
+    // 验证 ID 格式，防止路径遍历
+    if (!isValidId(siteId) || !isValidId(workId) || !isValidId(chapterId)) {
+      sendJson(res, 400, { error: "invalid_params", message: "Invalid ID format" });
       return true;
     }
 
@@ -158,7 +176,8 @@ export async function handleApiRoutes(req, res, url) {
 
     // 支持 admin secret 或 JWT 权限
     const adminSecretHeader = req.headers["x-admin-secret"];
-    const isAdminBySecret = config.adminSecret && adminSecretHeader === config.adminSecret;
+    // 使用时间安全比较防止时序攻击
+    const isAdminBySecret = config.adminSecret && safeCompare(adminSecretHeader, config.adminSecret);
 
     const tokenHeader = req.headers["x-paranote-token"];
     const jwtPayload = verifyJwt(
@@ -167,7 +186,9 @@ export async function handleApiRoutes(req, res, url) {
     );
 
     const isAdminByJwt = jwtPayload?.role === "admin" || jwtPayload?.isAdmin === true;
-    const isAuthor = !!editToken;
+    // editToken 需要实际验证，暂时禁用（需要存储 token 才能验证）
+    // TODO: 实现 editToken 验证逻辑
+    const isAuthor = false; // 禁用不安全的 editToken 验证
 
     if (!isAdminBySecret && !isAdminByJwt && !isAuthor) {
       sendJson(res, 403, { error: "permission_denied" });
@@ -273,7 +294,7 @@ export async function handleApiRoutes(req, res, url) {
   // GET /api/v1/export - 导出数据
   if (path === "/api/v1/export" && method === "GET") {
     const secret = req.headers["x-admin-secret"];
-    if (!config.adminSecret || secret !== config.adminSecret) {
+    if (!config.adminSecret || !safeCompare(secret, config.adminSecret)) {
       sendJson(res, 403, { error: "forbidden" });
       return true;
     }
@@ -295,7 +316,7 @@ export async function handleApiRoutes(req, res, url) {
   // POST /api/v1/import - 导入数据
   if (path === "/api/v1/import" && method === "POST") {
     const secret = req.headers["x-admin-secret"];
-    if (!config.adminSecret || secret !== config.adminSecret) {
+    if (!config.adminSecret || !safeCompare(secret, config.adminSecret)) {
       sendJson(res, 403, { error: "forbidden" });
       return true;
     }
@@ -341,7 +362,7 @@ export async function handleApiRoutes(req, res, url) {
 
     // 权限验证：需要管理员或作者（支持 admin secret）
     const adminSecretHeader = req.headers["x-admin-secret"];
-    const isAdminBySecret = config.adminSecret && adminSecretHeader === config.adminSecret;
+    const isAdminBySecret = config.adminSecret && safeCompare(adminSecretHeader, config.adminSecret);
 
     const tokenHeader = req.headers["x-paranote-token"];
     const jwtPayload = verifyJwt(
@@ -386,7 +407,7 @@ export async function handleApiRoutes(req, res, url) {
 
     // 权限验证（支持 admin secret）
     const adminSecretHeader = req.headers["x-admin-secret"];
-    const isAdminBySecret = config.adminSecret && adminSecretHeader === config.adminSecret;
+    const isAdminBySecret = config.adminSecret && safeCompare(adminSecretHeader, config.adminSecret);
 
     const tokenHeader = req.headers["x-paranote-token"];
     const jwtPayload = verifyJwt(
@@ -426,7 +447,7 @@ export async function handleApiRoutes(req, res, url) {
 
     // 权限验证（支持 admin secret）
     const adminSecretHeader = req.headers["x-admin-secret"];
-    const isAdminBySecret = config.adminSecret && adminSecretHeader === config.adminSecret;
+    const isAdminBySecret = config.adminSecret && safeCompare(adminSecretHeader, config.adminSecret);
 
     const tokenHeader = req.headers["x-paranote-token"];
     const jwtPayload = verifyJwt(
