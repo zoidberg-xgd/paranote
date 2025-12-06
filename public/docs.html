@@ -227,6 +227,52 @@ curl "http://localhost:4000/api/v1/fetch?url=https://example.com/article&mode=ra
         <pre><code>curl -X POST -H "x-admin-secret: YOUR_SECRET" \
   -H "Content-Type: application/json" \
   -d @backup.json http://localhost:4000/api/v1/import</code></pre>
+
+        <hr>
+
+        <h3><span class="method post">POST</span><span class="endpoint">/api/v1/ban</span></h3>
+        <p>拉黑用户 (禁止评论)</p>
+        
+        <h4>Body 参数 (JSON)</h4>
+        <table>
+            <tr><th>参数</th><th>必填</th><th>说明</th></tr>
+            <tr><td><code>siteId</code></td><td>是</td><td>站点 ID</td></tr>
+            <tr><td><code>targetUserId</code></td><td>是</td><td>要拉黑的用户 ID (支持 <code>ip_xxx</code> 匿名用户)</td></tr>
+            <tr><td><code>reason</code></td><td>否</td><td>拉黑原因</td></tr>
+        </table>
+        
+        <pre><code>curl -X POST -H "x-admin-secret: YOUR_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"siteId":"my-site","targetUserId":"ip_abc123","reason":"垃圾评论"}' \
+  http://localhost:4000/api/v1/ban</code></pre>
+
+        <h3><span class="method delete">DELETE</span><span class="endpoint">/api/v1/ban</span></h3>
+        <p>解除拉黑</p>
+        <pre><code>curl -X DELETE -H "x-admin-secret: YOUR_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"siteId":"my-site","targetUserId":"ip_abc123"}' \
+  http://localhost:4000/api/v1/ban</code></pre>
+
+        <h3><span class="method get">GET</span><span class="endpoint">/api/v1/ban</span></h3>
+        <p>获取黑名单列表</p>
+        <pre><code>curl -H "x-admin-secret: YOUR_SECRET" \
+  "http://localhost:4000/api/v1/ban?siteId=my-site"</code></pre>
+        
+        <h4>响应</h4>
+        <pre><code>{
+  "bannedUsers": [
+    {
+      "userId": "ip_abc123",
+      "reason": "垃圾评论",
+      "bannedBy": "admin",
+      "bannedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}</code></pre>
+
+        <div class="note">
+            <strong>管理后台：</strong>访问 <a href="/admin.html">/admin.html</a> 可视化管理评论和黑名单。
+        </div>
     </div>
 
     <!-- 集成 -->
