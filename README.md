@@ -67,6 +67,8 @@ npm run start:reader
 | Telegra.ph | `/p/<slug>` | 针对 Telegra.ph 的深度优化 |
 | 管理后台 | `/admin.html` | 评论管理、黑名单、数据导入导出 |
 
+**管理后台说明**：需要设置 `ADMIN_SECRET` 环境变量，登录时输入该密钥。密钥由你自己定义，建议使用 `openssl rand -hex 32` 生成强密钥。
+
 **抗反爬说明**：遇到 Cloudflare 时，服务器会自动启动浏览器尝试绕过。本地运行且 `PUPPETEER_HEADLESS=false` 时会弹出窗口让你点击验证码。
 
 ### 3. 油猴脚本
@@ -183,7 +185,7 @@ SITE_SECRETS='{"my-site":"YOUR_SECRET"}'
 | `DEPLOY_MODE` | full | `full` / `api` / `reader` |
 | `STORAGE_TYPE` | file | `file` / `mongo` |
 | `MONGO_URI` | - | MongoDB 连接串 |
-| `ADMIN_SECRET` | - | 管理员密钥 (导入导出) |
+| `ADMIN_SECRET` | - | 管理员密钥 (管理后台登录、数据导入导出) |
 | `SITE_SECRETS` | {} | JWT 密钥 (JSON 格式) |
 | `ENABLE_PUPPETEER` | true | 启用 Puppeteer 抓取 |
 | `PUPPETEER_HEADLESS` | true | 无头模式 |
