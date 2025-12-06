@@ -286,12 +286,14 @@ docker build -t paranote .
 docker run -d -p 4000:4000 -v $(pwd)/data:/app/data --name paranote paranote
 
 # Podman
-podman stop paranote && podman rm paranote
+podman rm -f paranote
 podman build -t paranote .
 podman run -d --restart=always --network=host -v paranote_data:/app/data --name paranote paranote
 ```
 
 > 💡 数据存储在 `/app/data` 卷中，重建容器不会丢失评论数据。
+> 
+> ⚠️ 如果遇到容器名称冲突错误，先运行 `docker rm -f paranote` 或 `podman rm -f paranote` 删除旧容器。
 
 ## 🛠 技术细节
 
