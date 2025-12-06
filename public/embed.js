@@ -482,12 +482,16 @@
         let isAuthor = false;
         let token = null;
         let editToken = null;
+        let currentUserId = null;
         
         if (typeof window !== "undefined" && window.PARANOTE_TOKEN) {
           token = window.PARANOTE_TOKEN;
           const payload = parseJwt(token);
-          if (payload && (payload.role === 'admin' || payload.isAdmin === true)) {
-            isAdmin = true;
+          if (payload) {
+            currentUserId = payload.sub || payload.userId;
+            if (payload.role === 'admin' || payload.isAdmin === true) {
+              isAdmin = true;
+            }
           }
         }
         
@@ -685,6 +689,42 @@
               }
             };
             actionContainer.appendChild(delBtn);
+            
+            // 拉黑按钮（仅管理员可见，且不能拉黑自己）
+            if (isAdmin && c.userId && c.userId !== currentUserId) {
+              const banBtn = document.createElement("button");
+              banBtn.innerHTML = "🚫";
+              banBtn.title = "拉黑此用户";
+              banBtn.style.cssText = "border:none; background:transparent; cursor:pointer; color:#aaa; font-size:14px; transition:color 0.2s;";
+              banBtn.onmouseenter = () => banBtn.style.color = "#bd1c2b";
+              banBtn.onmouseleave = () => banBtn.style.color = "#aaa";
+              banBtn.onclick = async function(e) {
+                e.stopPropagation();
+                const reason = prompt(`确定拉黑用户 "${c.userName || c.userId}" 吗？\n请输入拉黑原因（可选）：`);
+                if (reason === null) return; // 用户取消
+                try {
+                   const banData = { siteId, targetUserId: c.userId, reason: reason || "管理员拉黑" };
+                   const headers = { "Content-Type": "application/json" };
+                   if (window.PARANOTE_TOKEN) {
+                     headers["X-Paranote-Token"] = window.PARANOTE_TOKEN;
+                   }
+                   const result = await apiRequest(apiBase + "/api/v1/ban", {
+                     method: "POST",
+                     headers,
+                     body: JSON.stringify(banData)
+                   });
+                   if (result.success) {
+                       alert(`用户 "${c.userName || c.userId}" 已被拉黑`);
+                   } else {
+                       alert(result.error || "拉黑失败");
+                   }
+                } catch(e) { 
+                   console.error(e);
+                   alert("拉黑失败");
+                }
+              };
+              actionContainer.appendChild(banBtn);
+            }
           }
           
           // 点赞按钮
