@@ -55,10 +55,98 @@
     
     <div class="nav">
         <a href="/">首页</a>
+        <a href="#install">安装</a>
+        <a href="#cli">CLI 工具</a>
         <a href="#comments">评论 API</a>
         <a href="#fetch">抓取 API</a>
         <a href="#admin">管理 API</a>
         <a href="#integration">集成</a>
+    </div>
+
+    <!-- 安装 -->
+    <div class="section" id="install">
+        <h2>安装</h2>
+        
+        <h3>npm 全局安装 (推荐)</h3>
+        <pre><code>npm install -g paranote
+
+# 启动服务
+paranote start
+
+# 查看帮助
+paranote help</code></pre>
+
+        <h3>npx 直接运行</h3>
+        <pre><code>npx paranote start --port 4000</code></pre>
+
+        <h3>Docker</h3>
+        <pre><code>docker run -d -p 4000:4000 -v $(pwd)/data:/app/data paranote</code></pre>
+
+        <h3>作为项目依赖</h3>
+        <pre><code>npm install paranote</code></pre>
+        <pre><code>import { startServer } from 'paranote';
+await startServer({ port: 4000 });</code></pre>
+    </div>
+
+    <!-- CLI 工具 -->
+    <div class="section" id="cli">
+        <h2>CLI 命令行工具</h2>
+        <p>ParaNote 提供完整的命令行工具，无需 Web 管理后台即可管理评论和用户。</p>
+        
+        <h3>服务器命令</h3>
+        <table>
+            <tr><th>命令</th><th>说明</th></tr>
+            <tr><td><code>paranote start</code></td><td>启动服务器</td></tr>
+            <tr><td><code>paranote init</code></td><td>初始化配置文件</td></tr>
+            <tr><td><code>paranote build</code></td><td>构建嵌入脚本</td></tr>
+            <tr><td><code>paranote version</code></td><td>查看版本</td></tr>
+            <tr><td><code>paranote help</code></td><td>查看帮助</td></tr>
+        </table>
+
+        <h3>数据管理</h3>
+        <table>
+            <tr><th>命令</th><th>说明</th></tr>
+            <tr><td><code>paranote stats</code></td><td>查看统计信息</td></tr>
+            <tr><td><code>paranote list [--site] [--limit]</code></td><td>列出评论</td></tr>
+            <tr><td><code>paranote search &lt;keyword&gt;</code></td><td>搜索评论</td></tr>
+            <tr><td><code>paranote delete &lt;id&gt;</code></td><td>删除评论</td></tr>
+            <tr><td><code>paranote export [-o file]</code></td><td>导出数据</td></tr>
+            <tr><td><code>paranote import &lt;file&gt;</code></td><td>导入数据</td></tr>
+        </table>
+
+        <h3>用户管理</h3>
+        <table>
+            <tr><th>命令</th><th>说明</th></tr>
+            <tr><td><code>paranote ban &lt;userId&gt; --site &lt;siteId&gt;</code></td><td>拉黑用户</td></tr>
+            <tr><td><code>paranote unban &lt;userId&gt; --site &lt;siteId&gt;</code></td><td>解除拉黑</td></tr>
+            <tr><td><code>paranote banlist [--site]</code></td><td>查看黑名单</td></tr>
+        </table>
+
+        <h3>常用选项</h3>
+        <table>
+            <tr><th>选项</th><th>说明</th></tr>
+            <tr><td><code>--port, -p</code></td><td>指定端口</td></tr>
+            <tr><td><code>--storage, -s</code></td><td>存储类型: file | mongo</td></tr>
+            <tr><td><code>--json</code></td><td>JSON 格式输出</td></tr>
+            <tr><td><code>--yes, -y</code></td><td>跳过确认</td></tr>
+            <tr><td><code>--limit, -n</code></td><td>限制数量</td></tr>
+        </table>
+
+        <h4>示例</h4>
+        <pre><code># 查看最新 10 条评论
+paranote list --limit 10
+
+# 搜索评论
+paranote search "关键词" --site my-site
+
+# 拉黑用户
+paranote ban ip_abc123 --site my-site --reason "垃圾评论" -y
+
+# 导出备份
+paranote export -o backup.json
+
+# JSON 格式输出 (便于脚本处理)
+paranote list --json | jq '.[] | .id'</code></pre>
     </div>
 
     <!-- 评论 API -->
@@ -328,7 +416,16 @@ window.PARANOTE_TOKEN = jwt.sign({
         </table>
 
         <h3>Docker</h3>
-        <pre><code>docker run -d -p 4000:4000 -v ./data:/app/data zoidberg-xgd/paranote</code></pre>
+        <pre><code>docker run -d -p 4000:4000 -v $(pwd)/data:/app/data paranote</code></pre>
+    </div>
+
+    <div class="section">
+        <h2>更多信息</h2>
+        <p>
+            📦 <a href="https://www.npmjs.com/package/paranote">npm</a> |
+            💻 <a href="https://github.com/zoidberg-xgd/paranote">GitHub</a> |
+            📖 <a href="https://github.com/zoidberg-xgd/paranote#readme">完整文档</a>
+        </p>
     </div>
 
 </body>
