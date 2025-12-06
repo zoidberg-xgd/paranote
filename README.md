@@ -221,6 +221,7 @@ services:
     environment:
       - NODE_ENV=production
       - PUPPETEER_HEADLESS=true
+      - ADMIN_SECRET=${ADMIN_SECRET}  # 从系统环境变量读取，用于管理后台登录
       # - ENABLE_PUPPETEER=false      # 禁用以节省内存
       # - STORAGE_TYPE=mongo
       # - MONGO_URI=mongodb+srv://...
