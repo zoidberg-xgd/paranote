@@ -131,6 +131,58 @@
     "createdAt": "2025-12-06T20:14:05.827Z"
   },
   {
+    "id": "7ba3a0a5-0c8f-4707-90c8-0738ca79f408",
+    "siteId": "banned-comment-test-1765052136237-hbq2yr6quav",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 0,
+    "content": "First comment",
+    "userName": "访客-1079bd",
+    "userId": "ip_1079bd24e309e1e871dfa26da3769095",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:36.240Z"
+  },
+  {
+    "id": "2c3a97f8-56cd-48b1-9374-12e3b3a44704",
+    "siteId": "banned-comment-test-1765052145473-fi1xif8y2uq",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 0,
+    "content": "First comment",
+    "userName": "访客-e491d2",
+    "userId": "ip_e491d2ce786fca3992e3b1511e654cb2",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.475Z"
+  },
+  {
+    "id": "e7058e20-42d2-443a-8d55-07ec36ca703a",
+    "siteId": "banned-comment-test-1765052154465-xwkriwwusud",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 0,
+    "content": "First comment",
+    "userName": "访客-2b36b0",
+    "userId": "ip_2b36b065477b0285748e89130f72d62b",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:54.467Z"
+  },
+  {
+    "id": "0824fa38-6ea0-4814-a43c-56a293121ef3",
+    "siteId": "banned-comment-test-1765052163653-vp35udsn4t",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 0,
+    "content": "First comment",
+    "userName": "访客-94e2b3",
+    "userId": "ip_94e2b358a2217c8674f9ce458c0a193b",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.656Z"
+  },
+  {
     "id": "9d78a6e3-5954-4096-bf5f-c8e15cd0abb3",
     "siteId": "delete-test-1765006432125-piepaecbjpo",
     "workId": "test-work",
@@ -667,6 +719,102 @@
     "userId": "u2",
     "likes": 0,
     "createdAt": "2025-12-06T20:14:05.316Z"
+  },
+  {
+    "id": "7c6d3d67-7fb9-4114-99b5-e398290ff634",
+    "siteId": "export-test",
+    "workId": "export-work",
+    "chapterId": "export-ch",
+    "paraIndex": 0,
+    "content": "Export Test 1",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.762Z"
+  },
+  {
+    "id": "0179d165-b683-4354-a168-90f3b4d39547",
+    "siteId": "export-test",
+    "workId": "export-work",
+    "chapterId": "export-ch",
+    "paraIndex": 1,
+    "content": "Export Test 2",
+    "userName": "U2",
+    "userId": "u2",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.763Z"
+  },
+  {
+    "id": "caf3df5b-0597-4d4a-baf5-85c0a1e8e45a",
+    "siteId": "export-test",
+    "workId": "export-work",
+    "chapterId": "export-ch",
+    "paraIndex": 0,
+    "content": "Export Test 1",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.027Z"
+  },
+  {
+    "id": "cb7082ff-6ec6-44db-8c44-1115abc9a2de",
+    "siteId": "export-test",
+    "workId": "export-work",
+    "chapterId": "export-ch",
+    "paraIndex": 1,
+    "content": "Export Test 2",
+    "userName": "U2",
+    "userId": "u2",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.030Z"
+  },
+  {
+    "id": "93d0e9a1-bf5f-4149-b2b8-403bba01c4f6",
+    "siteId": "export-test",
+    "workId": "export-work",
+    "chapterId": "export-ch",
+    "paraIndex": 0,
+    "content": "Export Test 1",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:54.017Z"
+  },
+  {
+    "id": "bc1f1b32-ba96-4671-b482-6c7d719cbae8",
+    "siteId": "export-test",
+    "workId": "export-work",
+    "chapterId": "export-ch",
+    "paraIndex": 1,
+    "content": "Export Test 2",
+    "userName": "U2",
+    "userId": "u2",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:54.018Z"
+  },
+  {
+    "id": "4d62acb9-e6d7-4ad0-a704-a9e00425a520",
+    "siteId": "export-test",
+    "workId": "export-work",
+    "chapterId": "export-ch",
+    "paraIndex": 0,
+    "content": "Export Test 1",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.132Z"
+  },
+  {
+    "id": "f4e56b85-4e8c-482e-87b9-a13515aee522",
+    "siteId": "export-test",
+    "workId": "export-work",
+    "chapterId": "export-ch",
+    "paraIndex": 1,
+    "content": "Export Test 2",
+    "userName": "U2",
+    "userId": "u2",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.133Z"
   },
   {
     "id": "c444b6a9-1941-4acf-bfb7-7bfb0aac81f7",
@@ -1425,6 +1573,150 @@
     "createdAt": "2025-12-06T20:14:05.284Z"
   },
   {
+    "id": "82fa4b9a-79a6-459f-ab6e-680a675c7f88",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 0,
+    "content": "Para 0 comment",
+    "userName": "User1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.686Z"
+  },
+  {
+    "id": "00200c6b-2d61-4249-b34c-34d68ae41405",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 1,
+    "content": "Para 1 comment",
+    "userName": "User2",
+    "userId": "u2",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.705Z"
+  },
+  {
+    "id": "755e444a-3e9b-4543-9f14-7fe0606e2745",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 0,
+    "content": "Para 0 comment 2",
+    "userName": "User3",
+    "userId": "u3",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.710Z"
+  },
+  {
+    "id": "7683ebab-12db-42da-bc69-e07aba7b2986",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 0,
+    "content": "Para 0 comment",
+    "userName": "User1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:44.979Z"
+  },
+  {
+    "id": "df9006ed-cfe7-4ebb-aa87-e524ee66fb47",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 1,
+    "content": "Para 1 comment",
+    "userName": "User2",
+    "userId": "u2",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:44.982Z"
+  },
+  {
+    "id": "817e9725-55d7-4af3-88f8-a8778f6c3082",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 0,
+    "content": "Para 0 comment 2",
+    "userName": "User3",
+    "userId": "u3",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:44.984Z"
+  },
+  {
+    "id": "362d8c9b-1ce4-4953-9a72-89ca1fb43d6a",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 0,
+    "content": "Para 0 comment",
+    "userName": "User1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:53.921Z"
+  },
+  {
+    "id": "f7c88b4d-6ba1-4fa1-ac17-27ac65df7b06",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 1,
+    "content": "Para 1 comment",
+    "userName": "User2",
+    "userId": "u2",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:53.928Z"
+  },
+  {
+    "id": "b23c338c-d600-4972-a894-1198673adc25",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 0,
+    "content": "Para 0 comment 2",
+    "userName": "User3",
+    "userId": "u3",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:53.931Z"
+  },
+  {
+    "id": "58d08e43-fb34-4e4d-b5ec-7a0406c403fe",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 0,
+    "content": "Para 0 comment",
+    "userName": "User1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.044Z"
+  },
+  {
+    "id": "584d4025-1ad4-47d8-b2bc-25f50dabe4b4",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 1,
+    "content": "Para 1 comment",
+    "userName": "User2",
+    "userId": "u2",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.051Z"
+  },
+  {
+    "id": "2d092217-8e97-44e0-b613-a22a70e6648a",
+    "siteId": "group-test",
+    "workId": "group-work",
+    "chapterId": "group-ch",
+    "paraIndex": 0,
+    "content": "Para 0 comment 2",
+    "userName": "User3",
+    "userId": "u3",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.051Z"
+  },
+  {
     "id": "imported-1",
     "siteId": "import-test",
     "workId": "import-work",
@@ -1434,7 +1726,7 @@
     "userName": "Importer",
     "userId": "imp1",
     "likes": 5,
-    "createdAt": "2025-12-06T20:14:05.337Z"
+    "createdAt": "2025-12-06T20:16:03.185Z"
   },
   {
     "id": "fe8544dd-a0d9-4d74-b672-524b3eb5ea19",
@@ -2157,13 +2449,133 @@
     ]
   },
   {
+    "id": "cee0218a-46c9-4571-8b38-2cd8490b88fd",
+    "siteId": "like-test-site",
+    "workId": "like-test-work",
+    "chapterId": "like-test-chapter",
+    "paraIndex": 0,
+    "content": "LikeTest1",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:35.742Z",
+    "likedBy": [
+      "voter1"
+    ]
+  },
+  {
+    "id": "9e776d57-1631-458f-bafe-1b5203741c3d",
+    "siteId": "like-test-site",
+    "workId": "like-test-work",
+    "chapterId": "like-test-chapter",
+    "paraIndex": 1,
+    "content": "LikeTest2",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:35.751Z",
+    "likedBy": [
+      "voter1"
+    ]
+  },
+  {
+    "id": "46b5318f-8cb5-4461-83b7-9db5fbf717fc",
+    "siteId": "like-test-site",
+    "workId": "like-test-work",
+    "chapterId": "like-test-chapter",
+    "paraIndex": 0,
+    "content": "LikeTest1",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:45.011Z",
+    "likedBy": [
+      "voter1"
+    ]
+  },
+  {
+    "id": "3e453796-7d6c-4802-8ab6-d19af6366fa6",
+    "siteId": "like-test-site",
+    "workId": "like-test-work",
+    "chapterId": "like-test-chapter",
+    "paraIndex": 1,
+    "content": "LikeTest2",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:45.015Z",
+    "likedBy": [
+      "voter1"
+    ]
+  },
+  {
+    "id": "d3912d7f-78d1-40e1-ab0f-82ad10f56905",
+    "siteId": "like-test-site",
+    "workId": "like-test-work",
+    "chapterId": "like-test-chapter",
+    "paraIndex": 0,
+    "content": "LikeTest1",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:53.976Z",
+    "likedBy": [
+      "voter1"
+    ]
+  },
+  {
+    "id": "f7e7ff0b-cd23-465b-952a-04b1b3da9e0e",
+    "siteId": "like-test-site",
+    "workId": "like-test-work",
+    "chapterId": "like-test-chapter",
+    "paraIndex": 1,
+    "content": "LikeTest2",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:53.982Z",
+    "likedBy": [
+      "voter1"
+    ]
+  },
+  {
+    "id": "806b5c7c-0c12-4fae-ab24-4178610eacc0",
+    "siteId": "like-test-site",
+    "workId": "like-test-work",
+    "chapterId": "like-test-chapter",
+    "paraIndex": 0,
+    "content": "LikeTest1",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 1,
+    "createdAt": "2025-12-06T20:16:03.089Z",
+    "likedBy": [
+      "voter1"
+    ]
+  },
+  {
+    "id": "18bbf094-651f-4b42-965a-d8a32d0c56b3",
+    "siteId": "like-test-site",
+    "workId": "like-test-work",
+    "chapterId": "like-test-chapter",
+    "paraIndex": 1,
+    "content": "LikeTest2",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 1,
+    "createdAt": "2025-12-06T20:16:03.092Z",
+    "likedBy": [
+      "voter1"
+    ]
+  },
+  {
     "id": "migration-test-id-1",
     "siteId": "mig-site",
     "workId": "mig-work",
     "chapterId": "mig-ch",
     "paraIndex": 0,
     "content": "Migration Test Comment",
-    "createdAt": "2025-12-06T20:14:05.935Z"
+    "createdAt": "2025-12-06T20:16:03.580Z"
   },
   {
     "id": "4578cf34-d4d4-4545-91df-ba6f5c7c5a87",
@@ -2544,6 +2956,70 @@
     "userId": "u1",
     "likes": 2,
     "createdAt": "2025-12-06T20:14:05.307Z",
+    "likedBy": [
+      "voter1",
+      "voter2"
+    ]
+  },
+  {
+    "id": "5bd5f7f3-3ffe-4e9d-911b-581ea2cb32ce",
+    "siteId": "multi-like",
+    "workId": "multi-work",
+    "chapterId": "multi-ch",
+    "paraIndex": 0,
+    "content": "MultiLike",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 2,
+    "createdAt": "2025-12-06T20:15:35.753Z",
+    "likedBy": [
+      "voter1",
+      "voter2"
+    ]
+  },
+  {
+    "id": "86d95912-7891-427e-b9a7-f88be4558e10",
+    "siteId": "multi-like",
+    "workId": "multi-work",
+    "chapterId": "multi-ch",
+    "paraIndex": 0,
+    "content": "MultiLike",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 2,
+    "createdAt": "2025-12-06T20:15:45.017Z",
+    "likedBy": [
+      "voter1",
+      "voter2"
+    ]
+  },
+  {
+    "id": "7796958e-34e5-4840-b7bd-0ca79744ce4e",
+    "siteId": "multi-like",
+    "workId": "multi-work",
+    "chapterId": "multi-ch",
+    "paraIndex": 0,
+    "content": "MultiLike",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 2,
+    "createdAt": "2025-12-06T20:15:53.985Z",
+    "likedBy": [
+      "voter1",
+      "voter2"
+    ]
+  },
+  {
+    "id": "cbecbdce-5f0a-4ba9-8606-30f51a8ed23d",
+    "siteId": "multi-like",
+    "workId": "multi-work",
+    "chapterId": "multi-ch",
+    "paraIndex": 0,
+    "content": "MultiLike",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 2,
+    "createdAt": "2025-12-06T20:16:03.104Z",
     "likedBy": [
       "voter1",
       "voter2"
@@ -3172,6 +3648,106 @@
     "createdAt": "2025-12-06T20:14:05.296Z"
   },
   {
+    "id": "f76ee684-1ec4-426e-b0a7-9b1061a66225",
+    "siteId": "reply-test-site",
+    "workId": "reply-test-work",
+    "chapterId": "reply-test-chapter",
+    "paraIndex": 0,
+    "content": "Parent",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.720Z"
+  },
+  {
+    "id": "4fa8e53b-6105-49ad-81d5-15658d7f0e54",
+    "siteId": "reply-test-site",
+    "workId": "reply-test-work",
+    "chapterId": "reply-test-chapter",
+    "paraIndex": 0,
+    "content": "Reply",
+    "userName": "U2",
+    "userId": "u2",
+    "parentId": "f76ee684-1ec4-426e-b0a7-9b1061a66225",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.724Z"
+  },
+  {
+    "id": "c8e9ff9a-c9de-4b2c-abbf-5eeeb2d722b1",
+    "siteId": "reply-test-site",
+    "workId": "reply-test-work",
+    "chapterId": "reply-test-chapter",
+    "paraIndex": 0,
+    "content": "Parent",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:44.998Z"
+  },
+  {
+    "id": "b90bbbfc-7904-4c60-9d60-9beeda523c26",
+    "siteId": "reply-test-site",
+    "workId": "reply-test-work",
+    "chapterId": "reply-test-chapter",
+    "paraIndex": 0,
+    "content": "Reply",
+    "userName": "U2",
+    "userId": "u2",
+    "parentId": "c8e9ff9a-c9de-4b2c-abbf-5eeeb2d722b1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.000Z"
+  },
+  {
+    "id": "8391bb74-71de-4504-b4ea-180db31fff5b",
+    "siteId": "reply-test-site",
+    "workId": "reply-test-work",
+    "chapterId": "reply-test-chapter",
+    "paraIndex": 0,
+    "content": "Parent",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:53.959Z"
+  },
+  {
+    "id": "aa88a339-32c2-493e-bd70-1197527adf8f",
+    "siteId": "reply-test-site",
+    "workId": "reply-test-work",
+    "chapterId": "reply-test-chapter",
+    "paraIndex": 0,
+    "content": "Reply",
+    "userName": "U2",
+    "userId": "u2",
+    "parentId": "8391bb74-71de-4504-b4ea-180db31fff5b",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:53.960Z"
+  },
+  {
+    "id": "75a2d302-f25e-4f2a-8846-56c45f3df5b5",
+    "siteId": "reply-test-site",
+    "workId": "reply-test-work",
+    "chapterId": "reply-test-chapter",
+    "paraIndex": 0,
+    "content": "Parent",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.075Z"
+  },
+  {
+    "id": "15047aff-032e-4b29-b0c3-b6b76470b556",
+    "siteId": "reply-test-site",
+    "workId": "reply-test-work",
+    "chapterId": "reply-test-chapter",
+    "paraIndex": 0,
+    "content": "Reply",
+    "userName": "U2",
+    "userId": "u2",
+    "parentId": "75a2d302-f25e-4f2a-8846-56c45f3df5b5",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.077Z"
+  },
+  {
     "id": "34f3c9e5-aed3-4c73-bb00-bc63dcf94ab2",
     "siteId": "sort-test-1765006242629",
     "workId": "sort-work",
@@ -3480,6 +4056,118 @@
     ]
   },
   {
+    "id": "5a0602f9-b6ef-40f9-a0f8-aaebbf9951a1",
+    "siteId": "sort-test-1765052135715",
+    "workId": "sort-work",
+    "chapterId": "sort-ch",
+    "paraIndex": 0,
+    "content": "First",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.715Z"
+  },
+  {
+    "id": "d358297f-5419-4edd-9a6d-ef391719ed75",
+    "siteId": "sort-test-1765052135715",
+    "workId": "sort-work",
+    "chapterId": "sort-ch",
+    "paraIndex": 0,
+    "content": "Second",
+    "userName": "U2",
+    "userId": "u2",
+    "likes": 2,
+    "createdAt": "2025-12-06T20:15:35.716Z",
+    "likedBy": [
+      "voter1",
+      "voter2"
+    ]
+  },
+  {
+    "id": "b5824b75-630b-4503-86f8-a2052b72b9ad",
+    "siteId": "sort-test-1765052144985",
+    "workId": "sort-work",
+    "chapterId": "sort-ch",
+    "paraIndex": 0,
+    "content": "First",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:44.985Z"
+  },
+  {
+    "id": "610b1d45-cef5-4210-8a2d-293a0103fd6c",
+    "siteId": "sort-test-1765052144985",
+    "workId": "sort-work",
+    "chapterId": "sort-ch",
+    "paraIndex": 0,
+    "content": "Second",
+    "userName": "U2",
+    "userId": "u2",
+    "likes": 2,
+    "createdAt": "2025-12-06T20:15:44.986Z",
+    "likedBy": [
+      "voter1",
+      "voter2"
+    ]
+  },
+  {
+    "id": "05baffe9-0ddc-4582-aaad-420272d3dcff",
+    "siteId": "sort-test-1765052153935",
+    "workId": "sort-work",
+    "chapterId": "sort-ch",
+    "paraIndex": 0,
+    "content": "First",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:53.935Z"
+  },
+  {
+    "id": "304c601c-ed1c-49d3-aa9a-4a81133f513b",
+    "siteId": "sort-test-1765052153935",
+    "workId": "sort-work",
+    "chapterId": "sort-ch",
+    "paraIndex": 0,
+    "content": "Second",
+    "userName": "U2",
+    "userId": "u2",
+    "likes": 2,
+    "createdAt": "2025-12-06T20:15:53.937Z",
+    "likedBy": [
+      "voter1",
+      "voter2"
+    ]
+  },
+  {
+    "id": "9f2d879e-48fa-4f4a-a5aa-4f19895623aa",
+    "siteId": "sort-test-1765052163054",
+    "workId": "sort-work",
+    "chapterId": "sort-ch",
+    "paraIndex": 0,
+    "content": "First",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.055Z"
+  },
+  {
+    "id": "bbbd5ede-e625-418f-a0aa-f8f919523fd0",
+    "siteId": "sort-test-1765052163054",
+    "workId": "sort-work",
+    "chapterId": "sort-ch",
+    "paraIndex": 0,
+    "content": "Second",
+    "userName": "U2",
+    "userId": "u2",
+    "likes": 2,
+    "createdAt": "2025-12-06T20:16:03.065Z",
+    "likedBy": [
+      "voter1",
+      "voter2"
+    ]
+  },
+  {
     "id": "52cecad0-7b33-405e-97fb-0d3930561ea0",
     "siteId": "tapnote-local",
     "workId": "571e8fecbd8148e7b38ac1236754aa25",
@@ -3519,12 +4207,12 @@
     "content": "Imported",
     "userName": "Importer",
     "likes": 0,
-    "createdAt": "2025-12-06T20:14:05.974Z"
+    "createdAt": "2025-12-06T20:16:03.625Z"
   },
   {
-    "id": "6889998d-77cf-469f-a5c5-ad3dda413f02",
+    "id": "1f771a71-5b8d-497a-90ec-ee45285b4f7c",
     "siteId": "test-site",
-    "workId": "test-work-1765052045915",
+    "workId": "test-work-1765052163536",
     "chapterId": "test-chapter",
     "paraIndex": 0,
     "content": "Anonymous comment",
@@ -3532,12 +4220,12 @@
     "userId": "ip_2d9d03adaba527da2608f451f9247d45",
     "parentId": null,
     "likes": 0,
-    "createdAt": "2025-12-06T20:14:05.942Z"
+    "createdAt": "2025-12-06T20:16:03.559Z"
   },
   {
-    "id": "603e6576-c674-479b-93b9-b8fa020505e6",
+    "id": "76bf1a8f-f2a8-4fbc-b1a8-ff91907426dc",
     "siteId": "test-site",
-    "workId": "test-work-1765052045915",
+    "workId": "test-work-1765052163536",
     "chapterId": "test-chapter",
     "paraIndex": 1,
     "content": "Authenticated comment",
@@ -3545,12 +4233,12 @@
     "userId": "user-123",
     "parentId": null,
     "likes": 0,
-    "createdAt": "2025-12-06T20:14:05.946Z"
+    "createdAt": "2025-12-06T20:16:03.566Z"
   },
   {
-    "id": "d4972227-bf72-4390-b9f2-328d6f6ccf57",
+    "id": "f55a786b-9222-4f8f-83d5-f81fa1ef62cb",
     "siteId": "test-site",
-    "workId": "test-work-1765052045915",
+    "workId": "test-work-1765052163536",
     "chapterId": "test-chapter",
     "paraIndex": 10,
     "content": "Like this",
@@ -3558,15 +4246,15 @@
     "userId": "ip_2d9d03adaba527da2608f451f9247d45",
     "parentId": null,
     "likes": 1,
-    "createdAt": "2025-12-06T20:14:05.954Z",
+    "createdAt": "2025-12-06T20:16:03.579Z",
     "likedBy": [
       "ip_2d9d03adaba527da2608f451f9247d45"
     ]
   },
   {
-    "id": "4362a27e-37dc-4350-be9a-542c1bb8f1f0",
+    "id": "01ff0f79-911b-4162-b674-764a21bb8ceb",
     "siteId": "test-site",
-    "workId": "test-work-1765052045915",
+    "workId": "test-work-1765052163536",
     "chapterId": "test-chapter",
     "paraIndex": 11,
     "content": "Like once only",
@@ -3574,7 +4262,7 @@
     "userId": "ip_2d9d03adaba527da2608f451f9247d45",
     "parentId": null,
     "likes": 1,
-    "createdAt": "2025-12-06T20:14:05.959Z",
+    "createdAt": "2025-12-06T20:16:03.591Z",
     "likedBy": [
       "like-user"
     ]
@@ -6561,6 +7249,294 @@
     ]
   },
   {
+    "id": "0d5a522c-2a01-475f-ada2-24824a5f6e96",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 0,
+    "content": "Hello World",
+    "userName": "Guest",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:36.328Z"
+  },
+  {
+    "id": "5e2dc07f-ca0f-4bc9-a648-cb25f0b57163",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 1,
+    "content": "I am verified",
+    "userName": "Verified User",
+    "userId": "user-123",
+    "userAvatar": "http://example.com/avatar.png",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:36.336Z"
+  },
+  {
+    "id": "5ce44d0d-56a8-481e-9205-4dfddf02bc01",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 2,
+    "content": "Trying to hack",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:36.340Z"
+  },
+  {
+    "id": "dd182af7-c393-4bb7-a857-5e2dcfea2936",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 3,
+    "content": "Like me",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:36.343Z",
+    "likedBy": [
+      "user-like-test"
+    ]
+  },
+  {
+    "id": "554cd15d-407c-47a5-99c9-d9cc70b677aa",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 4,
+    "content": "Anon Like",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:36.355Z",
+    "likedBy": [
+      "ip_2d9d03adaba527da2608f451f9247d45"
+    ]
+  },
+  {
+    "id": "599633b2-f9fe-4efc-bca1-a4f2fab202ce",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 0,
+    "content": "Hello World",
+    "userName": "Guest",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.613Z"
+  },
+  {
+    "id": "6dc197e9-8628-414c-91b9-fe911a3f68ce",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 1,
+    "content": "I am verified",
+    "userName": "Verified User",
+    "userId": "user-123",
+    "userAvatar": "http://example.com/avatar.png",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.619Z"
+  },
+  {
+    "id": "ccbb2e73-cd6e-4c82-b8a7-ebb3534dc748",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 2,
+    "content": "Trying to hack",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.623Z"
+  },
+  {
+    "id": "708e4d30-d698-4791-a8af-5f19c413286b",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 3,
+    "content": "Like me",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:45.625Z",
+    "likedBy": [
+      "user-like-test"
+    ]
+  },
+  {
+    "id": "60f5615d-6204-4d16-87d1-d59606fc5fdf",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 4,
+    "content": "Anon Like",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:45.629Z",
+    "likedBy": [
+      "ip_2d9d03adaba527da2608f451f9247d45"
+    ]
+  },
+  {
+    "id": "9ac023c3-6722-4cd7-a217-97d51484e3f4",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 0,
+    "content": "Hello World",
+    "userName": "Guest",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:54.630Z"
+  },
+  {
+    "id": "744dbd57-3bca-4f5a-8823-ae6995043269",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 1,
+    "content": "I am verified",
+    "userName": "Verified User",
+    "userId": "user-123",
+    "userAvatar": "http://example.com/avatar.png",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:54.635Z"
+  },
+  {
+    "id": "1c5fdeaa-abe5-4650-8c12-37823555a8d1",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 2,
+    "content": "Trying to hack",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:54.637Z"
+  },
+  {
+    "id": "aa61cdff-a787-4612-9eae-53db84bea0a1",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 3,
+    "content": "Like me",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:54.640Z",
+    "likedBy": [
+      "user-like-test"
+    ]
+  },
+  {
+    "id": "eb0b68e2-810b-475c-95e6-a91457e31963",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 4,
+    "content": "Anon Like",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 1,
+    "createdAt": "2025-12-06T20:15:54.644Z",
+    "likedBy": [
+      "ip_2d9d03adaba527da2608f451f9247d45"
+    ]
+  },
+  {
+    "id": "d09c9e6d-45a4-433d-ad60-4a0b461cda08",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 0,
+    "content": "Hello World",
+    "userName": "Guest",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.821Z"
+  },
+  {
+    "id": "80af544b-b0d1-4ecc-b647-3fd37438240f",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 1,
+    "content": "I am verified",
+    "userName": "Verified User",
+    "userId": "user-123",
+    "userAvatar": "http://example.com/avatar.png",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.827Z"
+  },
+  {
+    "id": "f2c9a9eb-e660-48c0-aba7-ce92416c45c3",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 2,
+    "content": "Trying to hack",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.829Z"
+  },
+  {
+    "id": "975f0487-9146-4098-8015-0808fac03528",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 3,
+    "content": "Like me",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 1,
+    "createdAt": "2025-12-06T20:16:03.831Z",
+    "likedBy": [
+      "user-like-test"
+    ]
+  },
+  {
+    "id": "eecc304a-7891-4f79-b210-6e7716298d98",
+    "siteId": "test-site",
+    "workId": "test-work",
+    "chapterId": "ch-1",
+    "paraIndex": 4,
+    "content": "Anon Like",
+    "userName": "访客-2d9d03",
+    "userId": "ip_2d9d03adaba527da2608f451f9247d45",
+    "parentId": null,
+    "likes": 1,
+    "createdAt": "2025-12-06T20:16:03.835Z",
+    "likedBy": [
+      "ip_2d9d03adaba527da2608f451f9247d45"
+    ]
+  },
+  {
     "id": "a6ed4fcf-1ceb-4bf6-904a-a77345ce5b03",
     "siteId": "test-site",
     "workId": "test-work",
@@ -7648,6 +8624,158 @@
     "createdAt": "2025-12-06T20:14:05.299Z"
   },
   {
+    "id": "3e37017b-8c6c-470b-905e-6943ae89104b",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Parent",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.734Z"
+  },
+  {
+    "id": "ecf1918e-3c0f-4015-a451-7b3eb89a7482",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Reply 1",
+    "userName": "U2",
+    "userId": "u2",
+    "parentId": "3e37017b-8c6c-470b-905e-6943ae89104b",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.735Z"
+  },
+  {
+    "id": "103dabdc-c808-4d13-a790-bc1551d0ec44",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Reply 2",
+    "userName": "U3",
+    "userId": "u3",
+    "parentId": "3e37017b-8c6c-470b-905e-6943ae89104b",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:35.738Z"
+  },
+  {
+    "id": "7388fc6a-a05d-4d4b-b83e-0afc5e3bb0ec",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Parent",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.003Z"
+  },
+  {
+    "id": "0cf5d7ea-47e1-4844-b880-f8cb10aa11ce",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Reply 1",
+    "userName": "U2",
+    "userId": "u2",
+    "parentId": "7388fc6a-a05d-4d4b-b83e-0afc5e3bb0ec",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.006Z"
+  },
+  {
+    "id": "cdb7c723-d03e-45f7-b84e-5daf2c6c38af",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Reply 2",
+    "userName": "U3",
+    "userId": "u3",
+    "parentId": "7388fc6a-a05d-4d4b-b83e-0afc5e3bb0ec",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.008Z"
+  },
+  {
+    "id": "b20e0b03-846b-4cfa-850f-e246b8bf2162",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Parent",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:53.964Z"
+  },
+  {
+    "id": "d1129f9c-a52e-43c0-8a6d-31a6673800e5",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Reply 1",
+    "userName": "U2",
+    "userId": "u2",
+    "parentId": "b20e0b03-846b-4cfa-850f-e246b8bf2162",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:53.969Z"
+  },
+  {
+    "id": "1eb34071-3975-4d98-aeca-87613a3b6a84",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Reply 2",
+    "userName": "U3",
+    "userId": "u3",
+    "parentId": "b20e0b03-846b-4cfa-850f-e246b8bf2162",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:53.972Z"
+  },
+  {
+    "id": "a27b4f07-eb79-4fc6-8c01-1224104da8c6",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Parent",
+    "userName": "U1",
+    "userId": "u1",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.079Z"
+  },
+  {
+    "id": "6b11d8f9-b920-4ce5-a03d-71419e74ed07",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Reply 1",
+    "userName": "U2",
+    "userId": "u2",
+    "parentId": "a27b4f07-eb79-4fc6-8c01-1224104da8c6",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.082Z"
+  },
+  {
+    "id": "98fdc6cb-10b4-478e-befd-41c43c3f7050",
+    "siteId": "thread-test",
+    "workId": "thread-work",
+    "chapterId": "thread-ch",
+    "paraIndex": 0,
+    "content": "Reply 2",
+    "userName": "U3",
+    "userId": "u3",
+    "parentId": "a27b4f07-eb79-4fc6-8c01-1224104da8c6",
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.083Z"
+  },
+  {
     "id": "942324c8-a6f0-4000-8de4-4b3754cf64a9",
     "siteId": "unban-comment-test-1765006432117-5nb4penbotw",
     "workId": "test-work",
@@ -7908,6 +9036,110 @@
     "parentId": null,
     "likes": 0,
     "createdAt": "2025-12-06T20:14:05.843Z"
+  },
+  {
+    "id": "ffda35e7-2663-45e0-b28b-5500e019e4bb",
+    "siteId": "unban-comment-test-1765052136246-znmuio1n8xs",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 0,
+    "content": "First",
+    "userName": "访客-1ea02f",
+    "userId": "ip_1ea02f4cc1c47cf3f7b75f53cdd110e4",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:36.248Z"
+  },
+  {
+    "id": "c858d129-4c81-4564-8e13-26684a9c7d3d",
+    "siteId": "unban-comment-test-1765052136246-znmuio1n8xs",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 1,
+    "content": "After unban",
+    "userName": "访客-1ea02f",
+    "userId": "ip_1ea02f4cc1c47cf3f7b75f53cdd110e4",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:36.253Z"
+  },
+  {
+    "id": "af97b761-3663-4328-a85a-0afb2954f040",
+    "siteId": "unban-comment-test-1765052145480-8oamwcektno",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 0,
+    "content": "First",
+    "userName": "访客-5a8db1",
+    "userId": "ip_5a8db1043056e621a42084217035585a",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.481Z"
+  },
+  {
+    "id": "871a9550-b2bd-4f9a-b914-e804513b65c0",
+    "siteId": "unban-comment-test-1765052145480-8oamwcektno",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 1,
+    "content": "After unban",
+    "userName": "访客-5a8db1",
+    "userId": "ip_5a8db1043056e621a42084217035585a",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:45.490Z"
+  },
+  {
+    "id": "62934e07-0f9f-4f5c-9cfc-873c92a5cc65",
+    "siteId": "unban-comment-test-1765052154473-t7e0ylb6qu",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 0,
+    "content": "First",
+    "userName": "访客-895e80",
+    "userId": "ip_895e807ca86c1d4e62b61eb30aa1f298",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:54.475Z"
+  },
+  {
+    "id": "94f0813f-66ec-4d05-8b56-52f3dd85829d",
+    "siteId": "unban-comment-test-1765052154473-t7e0ylb6qu",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 1,
+    "content": "After unban",
+    "userName": "访客-895e80",
+    "userId": "ip_895e807ca86c1d4e62b61eb30aa1f298",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:15:54.486Z"
+  },
+  {
+    "id": "5e718a3a-2511-4578-b248-0d6225637e30",
+    "siteId": "unban-comment-test-1765052163664-luxhgknf9db",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 0,
+    "content": "First",
+    "userName": "访客-6b53a2",
+    "userId": "ip_6b53a2be8be20e980dd69d916d21295e",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.666Z"
+  },
+  {
+    "id": "a638e3e4-c2b7-418f-8959-0966f833fc1c",
+    "siteId": "unban-comment-test-1765052163664-luxhgknf9db",
+    "workId": "test-work",
+    "chapterId": "test-ch",
+    "paraIndex": 1,
+    "content": "After unban",
+    "userName": "访客-6b53a2",
+    "userId": "ip_6b53a2be8be20e980dd69d916d21295e",
+    "parentId": null,
+    "likes": 0,
+    "createdAt": "2025-12-06T20:16:03.675Z"
   },
   {
     "id": "885b96e1-8dcc-4402-96bc-4bf88881caab",

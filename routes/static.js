@@ -273,6 +273,74 @@ function generateAdminSetupPage() {
 }
 
 /**
+ * 生成管理后台禁用页面 (生产环境，未配置 ADMIN_SECRET)
+ */
+function generateAdminDisabledPage() {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ParaNote - 管理后台未启用</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+    }
+    .icon { font-size: 48px; margin-bottom: 20px; }
+    h1 { color: #333; margin-bottom: 15px; font-size: 24px; }
+    p { color: #666; line-height: 1.6; margin-bottom: 20px; }
+    .hint {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      font-size: 14px;
+      color: #666;
+      text-align: left;
+    }
+    .hint-title { font-weight: bold; color: #333; margin-bottom: 8px; }
+    a { color: #667eea; text-decoration: none; }
+    .footer { margin-top: 25px; font-size: 13px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🔒</div>
+    <h1>管理后台未启用</h1>
+    <p>此 ParaNote 实例的管理后台功能尚未配置。</p>
+    
+    <div class="hint">
+      <div class="hint-title">如果你是站点管理员：</div>
+      请联系服务器管理员配置 <code>ADMIN_SECRET</code> 环境变量以启用管理后台。
+      <br><br>
+      详细配置说明请参考 <a href="https://github.com/zoidberg-xgd/paranote#readme" target="_blank">文档</a>。
+    </div>
+    
+    <div class="footer">
+      <a href="/">返回首页</a> · 
+      <a href="/docs">API 文档</a>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
  * 处理静态文件路由
  * @returns {boolean} 是否已处理请求
  */
@@ -390,10 +458,26 @@ export async function handleStaticRoutes(req, res, url) {
 
   // 管理后台 (所有模式)
   if (pathname === "/admin" || pathname === "/admin.html" || pathname === "/public/admin.html") {
-    // 如果 ADMIN_SECRET 未配置，显示设置向导
+    // 如果 ADMIN_SECRET 未配置
     if (!config.adminSecret) {
-      const setupHtml = generateAdminSetupPage();
-      sendFile(res, setupHtml, "text/html; charset=utf-8");
+      // 检测是否是本地访问 (localhost / 127.0.0.1 / 内网 IP)
+      const host = req.headers.host || "";
+      const isLocal = host.startsWith("localhost") || 
+                      host.startsWith("127.0.0.1") ||
+                      host.startsWith("0.0.0.0") ||
+                      host.startsWith("192.168.") ||
+                      host.startsWith("10.") ||
+                      host.startsWith("172.");
+      
+      if (isLocal) {
+        // 本地环境：显示完整设置向导
+        const setupHtml = generateAdminSetupPage();
+        sendFile(res, setupHtml, "text/html; charset=utf-8");
+      } else {
+        // 生产环境：只显示简单提示，不暴露密钥生成
+        const simpleHtml = generateAdminDisabledPage();
+        sendFile(res, simpleHtml, "text/html; charset=utf-8");
+      }
       return true;
     }
     
