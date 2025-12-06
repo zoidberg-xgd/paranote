@@ -253,6 +253,28 @@ podman run -d --restart=always --network=host -v paranote_data:/app/data --name 
 sudo firewall-cmd --add-port=4000/tcp --permanent && sudo firewall-cmd --reload
 ```
 
+### 更新部署
+
+代码更新后重新部署：
+
+```bash
+# Docker Compose (推荐)
+git pull
+docker-compose up -d --build
+
+# Docker 命令行
+docker stop paranote && docker rm paranote
+docker build -t paranote .
+docker run -d -p 4000:4000 -v $(pwd)/data:/app/data --name paranote paranote
+
+# Podman
+podman stop paranote && podman rm paranote
+podman build -t paranote .
+podman run -d --restart=always --network=host -v paranote_data:/app/data --name paranote paranote
+```
+
+> 💡 数据存储在 `/app/data` 卷中，重建容器不会丢失评论数据。
+
 ## 🛠 技术细节
 
 ### 模糊定位 (Fuzzy Anchoring)
