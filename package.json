@@ -1,6 +1,6 @@
 {
   "name": "paranote",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ParaNote: Lightweight paragraph comments service for novel and article sites",
   "type": "module",
   "main": "index.js",
