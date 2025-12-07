@@ -3,8 +3,14 @@
  * 包括：存储层测试、API 层测试、权限验证测试
  */
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
+import path from 'path';
+import os from 'os';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
+
+// Set unique data directory for this test file to avoid conflicts
+process.env.PARANOTE_DATA_DIR = path.join(os.tmpdir(), `paranote-test-ban-${Date.now()}-${Math.random()}`);
+
 import { createFileStorage } from '../storage-file.js';
 
 // 设置测试环境变量 (必须在 import server 之前)

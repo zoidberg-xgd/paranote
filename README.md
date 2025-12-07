@@ -334,6 +334,36 @@ nano .env
 | `api` | 仅核心 API，无抓取 | <100MB |
 | `reader` | API + 阅读器，无首页 | ~500MB |
 
+### Vercel 部署 (Serverless)
+
+ParaNote 支持部署到 Vercel Serverless Functions（仅 API 模式）。
+
+1. Fork 本项目到你的 GitHub
+2. 在 Vercel 中导入项目
+3. 配置环境变量：
+   - `STORAGE_TYPE`: `mongo`
+   - `MONGO_URI`: `mongodb+srv://...` (你的 MongoDB Atlas 连接串)
+   - `ADMIN_SECRET`: (生成的随机密钥)
+   - `SITE_SECRETS`: (你的 JWT 密钥 JSON)
+4. 部署即可
+
+> 注意：Serverless 模式下不支持 Puppeteer 抓取功能 (`/api/v1/fetch`)，仅提供评论服务 API。
+
+### Cloudflare Workers 部署 (V8 Edge)
+
+ParaNote 提供完全兼容 Edge 环境的重写版本，使用 MongoDB Atlas Data API。
+
+1. **准备**: 在 MongoDB Atlas 开启 [Data API](https://www.mongodb.com/docs/atlas/app-services/data-api/)，获取 URL 和 API Key。
+2. **安装**: `npm install -g wrangler`
+3. **配置**: 修改 `wrangler.toml` 中的 `ATLAS_API_URL` 等变量。
+4. **设置密钥**:
+   ```bash
+   wrangler secret put ATLAS_API_KEY
+   wrangler secret put SITE_SECRETS  # 例如 {"my-site":"secret"}
+   wrangler secret put ADMIN_SECRET
+   ```
+5. **部署**: `wrangler deploy`
+
 ### Docker Compose (推荐)
 
 ```yaml

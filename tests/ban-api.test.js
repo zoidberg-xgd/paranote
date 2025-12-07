@@ -2,8 +2,12 @@
  * 拉黑 API 端点测试
  */
 import { describe, it, expect } from 'vitest';
+import path from 'path';
+import os from 'os';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
+
+process.env.PARANOTE_DATA_DIR = path.join(os.tmpdir(), `paranote-test-banapi-${Date.now()}-${Math.random()}`);
 
 // 设置测试环境变量
 process.env.ADMIN_SECRET = 'test-admin-secret';

@@ -44,6 +44,11 @@ export function redirect(res, location, status = 302) {
 // ==================== 请求解析 ====================
 
 export function parseBody(req, maxSize = config.maxBodySize) {
+  // Support environments where body is already parsed (e.g. Vercel, Express)
+  if (req.body && typeof req.body === 'object') {
+    return Promise.resolve(req.body);
+  }
+
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => {

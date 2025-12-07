@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" }
+  ],
+  "env": {
+    "DEPLOY_MODE": "api",
+    "STORAGE_TYPE": "mongo"
+  }
+}

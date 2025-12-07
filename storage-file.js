@@ -7,7 +7,7 @@ import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.PARANOTE_DATA_DIR || path.join(__dirname, 'data');
 const BANLIST_FILE = path.join(DATA_DIR, '_banlists.json');
 
 // 黑名单存储辅助函数

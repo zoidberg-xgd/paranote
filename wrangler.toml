@@ -1,0 +1,9 @@
+name = "paranote-worker"
+main = "worker/index.js"
+compatibility_date = "2023-01-01"
+
+[vars]
+ATLAS_API_URL = "https://data.mongodb-api.com/app/data-xxxxx/endpoint/data/v1"
+ATLAS_DATA_SOURCE = "Cluster0"
+ATLAS_DATABASE = "paranote"
+# ATLAS_API_KEY and SITE_SECRETS should be set via `wrangler secret put`
