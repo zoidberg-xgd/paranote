@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub](https://img.shields.io/github/stars/zoidberg-xgd/paranote?style=social)](https://github.com/zoidberg-xgd/paranote)
 
-🔴 **[在线演示](https://zoidbergxgd.pythonanywhere.com/ngVZlqHl/)** (集成在 TapNote 中) | 📦 **[npm](https://www.npmjs.com/package/paranote)** | 💻 **[GitHub](https://github.com/zoidberg-xgd/paranote)**
+**[在线演示](https://zoidbergxgd.pythonanywhere.com/ngVZlqHl/)** (集成在 TapNote 中) | **[npm](https://www.npmjs.com/package/paranote)** | **[GitHub](https://github.com/zoidberg-xgd/paranote)**
 
 ## 目录
 
@@ -21,7 +21,7 @@
 
 ---
 
-## ✨ 核心特性
+## 核心特性
 
 - **双重模式** - 既是独立的阅读器，也是可嵌入的评论插件
 - **段落级评论** - 精确到段落的互动，支持回复、点赞和删除
@@ -36,7 +36,7 @@
 
 ---
 
-## 📦 快速开始
+## 快速开始
 
 ### 方式一：npm 全局安装 (推荐)
 
@@ -88,7 +88,7 @@ server.listen(config.port, () => {
 
 ---
 
-## 🖥 CLI 命令行工具
+## CLI 命令行工具
 
 ParaNote 提供完整的命令行工具，让你无需 Web 管理后台即可管理评论和用户。
 
@@ -192,7 +192,7 @@ paranote list --json | jq '.[] | .id'
 
 ---
 
-## 📖 使用模式
+## 使用模式
 
 ### 模式一：ParaNote 阅读器 (独立使用)
 
@@ -230,7 +230,7 @@ paranote list --json | jq '.[] | .id'
 
 ---
 
-## 📚 站长集成指南
+## 站长集成指南
 
 ### 脚本配置参数
 
@@ -299,7 +299,7 @@ SITE_SECRETS='{"my-site":"YOUR_SECRET"}'
 
 ---
 
-## 🚀 部署
+## 部署
 
 ### 环境变量
 
@@ -372,11 +372,11 @@ git pull
 docker-compose up -d --build
 ```
 
-> 💡 数据存储在 `/app/data` 卷中，重建容器不会丢失评论数据。
+> 数据存储在 `/app/data` 卷中，重建容器不会丢失评论数据。
 
 ---
 
-## 📡 API 参考
+## API 参考
 
 ### 评论 API
 
@@ -418,7 +418,7 @@ curl -X POST -H "x-admin-secret: $ADMIN_SECRET" -H "Content-Type: application/js
 
 ---
 
-## 🧪 开发
+## 开发
 
 ```bash
 npm install           # 安装依赖
